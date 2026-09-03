@@ -1,5 +1,7 @@
 #include <fstream>
 #include <stdexcept>
+#include <sstream>
+#include <filesystem>
 
 #include "network.hpp"
 #include "utils.hpp"
@@ -180,13 +182,20 @@ bool Network::editCStation(int id, int newNumWorkers, int newNumActiveWorkers, c
 
 
 
-bool Network::saveToFile() {
+bool Network::saveToFile(const std::string& dirPath) {
     // Получаем время
     const auto timestamp = getTimestamp();
 
+    // Формируем пути к файлам
+    const std::string pipePath =
+        dirPath + "/pipes_" + timestamp + ".csv";
+
+    const std::string cStationPath =
+        dirPath + "/cstations_" + timestamp + ".csv";
+
     // Открытие потоков записи
-    std::ofstream pipeFile("pipes_" + timestamp + ".csv");
-    std::ofstream cStationFile("cstations_" + timestamp + ".csv");
+    std::ofstream pipeFile(pipePath);
+    std::ofstream cStationFile(cStationPath);
 
     if (!pipeFile || !cStationFile) {
         return false;
@@ -194,30 +203,37 @@ bool Network::saveToFile() {
 
     // Запись труб в файл
     pipeFile << "ID,Diameter,Length,Name,IsRepair,CStationFromId,CStationToId\n";
+
     for (const auto& pipe : pipeArray) {
-        pipeFile << pipe.getId() << ',' << pipe.getDiameter() << ','
-                 << pipe.getLength() << ',' << pipe.getName() << ','
-                 << pipe.getRepair() << ',' << pipe.getCStationFromId() << ','
+        pipeFile << pipe.getId() << ','
+                 << pipe.getDiameter() << ','
+                 << pipe.getLength() << ','
+                 << pipe.getName() << ','
+                 << pipe.getRepair() << ','
+                 << pipe.getCStationFromId() << ','
                  << pipe.getCStationToId() << '\n';
     }
 
     // Запись КС в файл
     cStationFile << "ID,NumWorkers,NumActiveWorkers,Name,StationType\n";
+
     for (const auto& cStation : CStationArray) {
-        cStationFile << cStation.getId() << ',' << cStation.getNumWorkers() << ','
-                     << cStation.getNumActiveWorkers() << ',' << cStation.getName() << ','
+        cStationFile << cStation.getId() << ','
+                     << cStation.getNumWorkers() << ','
+                     << cStation.getNumActiveWorkers() << ','
+                     << cStation.getName() << ','
                      << static_cast<int>(cStation.getStationType()) << '\n';
     }
 
-    // Проверка на успех записи
     return pipeFile.good() && cStationFile.good();
 }
 
 bool Network::loadFromFile(const std::string& pipePath, const std::string& cStationPath) {
 
     // Открытие потоков чтения
-    std::ifstream pipeFile(pipePath);
-    std::ifstream cStationFile(cStationPath);
+    std::ifstream pipeFile { std::filesystem::path(pipePath) };
+    std::ifstream cStationFile { std::filesystem::path(cStationPath) };
+
     if (!pipeFile || !cStationFile) {
         return false;
     }
@@ -299,8 +315,19 @@ bool Network::loadFromFile(const std::string& pipePath, const std::string& cStat
 
     CStationArray = std::move(loadedNetwork.CStationArray);
     pipeArray = std::move(loadedNetwork.pipeArray);
-    currentPipeId = loadedNetwork.currentPipeId;
-    currentCStationId = loadedNetwork.currentCStationId;
+
+    // Сопостовление Id
+    if (!pipeArray.empty()) {
+        currentPipeId = pipeArray.back().getId() + 1;
+    } else {
+        currentPipeId = 0;
+    }
+
+    if (!CStationArray.empty()) {
+        currentCStationId = CStationArray.back().getId() + 1;
+    } else {
+        currentCStationId = 0;
+    }
 
     return true;
 }

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <format>
 #include <set>
+#include <format>
 
 #include "console.hpp"
 #include "units.hpp"
@@ -407,6 +407,42 @@ void Console::handleDeleteCS() {
 }
 
 
+void Console::handleSave() {
+    clearConsole();
+
+    while (true) {
+        const std::string dirPath = readLine("Путь к папке сохранения: ", "data");
+
+        if (network.saveToFile(dirPath)) {
+            std::cout << "Сохранено в папку " << dirPath << "\n";
+            break;
+        } else {
+            std::cerr << "[*] Ошибка сохранения\n";
+        }
+    }
+
+    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+}
+
+void Console::handleLoad() {
+    clearConsole();
+
+    while (true) {
+        const std::string pipePath = readLine("Полный путь к файлу труб: ");
+
+        const std::string cStationPath = readLine("Полный путь к файлу КС: ");
+
+        if (network.loadFromFile(pipePath, cStationPath)) {
+            std::cout << "Загружено\n";
+            break;
+        } else {
+            std::cerr << "[*] Ошибка загрузки: проверьте пути и формат файлов\n";
+        }
+    }
+
+    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+}
+
 /*
 
 
@@ -482,7 +518,7 @@ void Console::run() {
         printMenu();
 
         try {
-            switch (readInt("Выбор: ", -1)) {
+            switch (readInt("\nExit - в любом действии, чтобы вернуться в меню.\nВыбор: ", -1)) {
                 case 1: handleAddPipe(); break;
                 case 2: handleAddCS(); break;
                 case 3: handleViewAll(); break;
@@ -490,8 +526,8 @@ void Console::run() {
                 case 5: handleEditCStation(); break;
                 case 6: handleDeletePipe(); break;
                 case 7: handleDeleteCS(); break;
-                //case 8: handleSave(); break;
-                //case 9: handleLoad(); break;
+                case 8: handleSave(); break;
+                case 9: handleLoad(); break;
                 case 0: running = false; break;
                 default:
                     std::cout << "Ошибка: Нет такого пункта меню.\n";

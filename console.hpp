@@ -42,8 +42,8 @@ private:
     void handleEditCStation();
     void handleDeletePipe();
     void handleDeleteCS();
-    //void handleSave();
-    //void handleLoad();
+    void handleSave();
+    void handleLoad();
     
     // Принтеры
     void printMenu() const;

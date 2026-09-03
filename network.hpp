@@ -48,7 +48,7 @@ public:
     bool editCStation(int id, int newNumWorkers, int newNumActiveWorkers, const std::string& newName, StationType newType);
 
     // Работа с файлами
-    bool saveToFile();
+    bool saveToFile(const std::string& dirPath);
     bool loadFromFile(const std::string& pipePath, const std::string& cStationPath);
 
 };
