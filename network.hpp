@@ -14,11 +14,11 @@ private:
     std::vector<CompressorStation> CStationArray {};
 
 public:
-    // Вспомогательные
+    // Геттеры и чекеры
     int getNextPipeId();
     int getNextCStationId();
     
-    // Чтение счётчика без инкрементации
+    
     int getCurrentPipeId() const;
     int getCurrentCStationId() const;
 

@@ -187,11 +187,9 @@ bool Network::saveToFile(const std::string& dirPath) {
     const auto timestamp = getTimestamp();
 
     // Формируем пути к файлам
-    const std::string pipePath =
-        dirPath + "/pipes_" + timestamp + ".csv";
+    const std::string pipePath = dirPath + "/pipes_" + timestamp + ".csv";
 
-    const std::string cStationPath =
-        dirPath + "/cstations_" + timestamp + ".csv";
+    const std::string cStationPath = dirPath + "/cstations_" + timestamp + ".csv";
 
     // Открытие потоков записи
     std::ofstream pipeFile(pipePath);
@@ -312,7 +310,7 @@ bool Network::loadFromFile(const std::string& pipePath, const std::string& cStat
     } catch (const std::exception&) {
         return false;
     }
-
+    
     CStationArray = std::move(loadedNetwork.CStationArray);
     pipeArray = std::move(loadedNetwork.pipeArray);
 

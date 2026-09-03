@@ -172,7 +172,7 @@ std::vector<int> Console::readMultipleChoice(const std::string& prompt) const {
 
 */
 
-// Добавлние 
+// Добавление 
 void Console::handleAddPipe() {
     clearConsole();
 
@@ -284,7 +284,7 @@ void Console::handleEditPipe() {
         }
     }
 
-    // Чтение прошлых значений Трубы с первым Id
+    // Чтение прошлых и новых значений Трубы с первым Id
     const Pipe& oldPipe = network.getPipeById(ids[0]);
 
     const int diameter = readInt("Новый диаметр (мм): ", oldPipe.getDiameter(), true);
@@ -328,7 +328,7 @@ void Console::handleEditCStation() {
         }
     }
 
-    // Чтение прошлых значений КС с первым Id
+    // Чтение прошлых и новых значений КС с первым Id
     const CompressorStation& oldCStation = network.getCStationById(ids[0]);
 
     const int numWorkers = readInt("Количество цехов: ", oldCStation.getNumWorkers(), true);
@@ -370,7 +370,7 @@ void Console::handleDeletePipe() {
 
     const std::vector<int> ids = readMultipleChoice("ID труб/трубы для удаления (В форматах 1/1,2,3): ");
 
-    for (const int id : ids) {
+    for (const auto& id : ids) {
         if (!network.isPipeInArrayById(id)) {
             std::cout << "Ошибка: Нет трубы с ID=" << id << "\n";
             continue;
@@ -394,7 +394,7 @@ void Console::handleDeleteCS() {
 
     const std::vector<int> ids = readMultipleChoice("ID КС для удаления (В форматах 1/1,2,3): ");
 
-    for (const int id : ids) {
+    for (const auto& id : ids) {
         if (!network.isCStationInArrayById(id)) {
             std::cout << "Ошибка: Нет КС с ID=" << id << "\n";
             continue;
