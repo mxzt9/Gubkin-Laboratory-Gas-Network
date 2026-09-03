@@ -48,7 +48,14 @@ public:
     bool editCStation(int id, int newNumWorkers, int newNumActiveWorkers, const std::string& newName, StationType newType);
 
     // Работа с файлами
-    bool saveToFile(const std::string& dirPath);
+    bool saveToFile(const std::string& dirPath, const std::string& pipeFileName, const std::string& cStationFileName);
     bool loadFromFile(const std::string& pipePath, const std::string& cStationPath);
+
+    // Поиск по фильтрам
+    std::vector<const Pipe*> searchPipesByName(const std::string& name) const;
+    std::vector<const Pipe*> searchPipesByRepair(bool isRepair) const;
+
+    std::vector<const CompressorStation*> searchCStationsByName(const std::string& name) const;
+    std::vector<const CompressorStation*> searchCStationsByActive(const std::vector<char>& condition) const;
 
 };

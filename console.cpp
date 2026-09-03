@@ -161,6 +161,53 @@ std::vector<int> Console::readMultipleChoice(const std::string& prompt) const {
     }
 }
 
+std::vector<char> Console::readActiveSearch(const std::string& prompt) const {
+    while (true) {
+        const std::string input = readLine(prompt);
+
+        // Проверка на размер строки
+        if (input.size() < 2) {
+            std::cout << "Некорректный ввод\n";
+            continue;
+        }
+
+        // Проверка наличия знаков сравнения
+        if (input[0] != '>' && input[0] != '<' && input[0] != '=') {
+            std::cout << "Условие должно начинаться с >, < или =\n";
+            continue;
+        }
+        // Проверка на знак процента в конце строки
+        const bool isPercent = input.back() == '%';
+        // Индекс последней цифры
+        const size_t numberEnd = isPercent ? input.size() - 1 : input.size();
+
+        // Проверка на некорректный ввод вида (>%)
+        if (numberEnd == 1) {
+            std::cout << "После знака сравнения должно быть число\n";
+            continue;
+        }
+
+        int value {};
+        try {
+            value = std::stoi(input.substr(1, numberEnd - 1));
+        } 
+        catch (const std::invalid_argument&) {
+            std::cerr << "[*] Ошибка: Некорректно введено число.\n";
+            continue;
+        }
+        catch (const std::out_of_range&) {
+            std::cerr << "[*] Ошибка: Число слишком большое.\n";
+            continue;
+        }
+
+        if (isPercent && value > 100) {
+            std::cout << "[*] Ошибка: Процент должен быть от 0 до 100\n";
+            continue;
+        }
+
+        return std::vector<char>(input.begin(), input.end());
+    }
+}
 
 /*
 
@@ -258,7 +305,38 @@ void Console::handleViewAll() {
 
     std::cout << "\n\n";
 
-    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+
+
+    printMenuViewAll();
+
+    switch (readInt("Выбор: ")) {
+        case 1: {
+            handleSearchPipesByName();
+            readLine("\nНажмите Enter, чтобы продолжить...");
+            break;
+        }
+        case 2: {
+            handleSearchPipesByRepair();
+            readLine("\nНажмите Enter, чтобы продолжить...");
+            break;
+        }
+        case 3: {
+            handleSearchCStationsByName();
+            readLine("\nНажмите Enter, чтобы продолжить...");
+            break;
+        }
+        case 4: {
+            handleSearchCStationsByActive();
+            readLine("\nНажмите Enter, чтобы продолжить...");
+            break;
+        }
+        case 0: return;
+        default: {
+            std::cout << "Ошибка: Нет такого пункта меню.\n";
+            readLine("\nНажмите Enter, чтобы продолжить...");
+            break;
+        }
+    }
 }
 
 
@@ -411,14 +489,20 @@ void Console::handleSave() {
     clearConsole();
 
     while (true) {
-        const std::string dirPath = readLine("Путь к папке сохранения: ", "data");
+        const std::string timestamp = getTimestamp();
 
-        if (network.saveToFile(dirPath)) {
-            std::cout << "Сохранено в папку " << dirPath << "\n";
+        const std::string dirPath = readLine("Путь к папке сохранения:", "data");
+
+        const std::string pipeFileName = readLine("Имя файла труб:", "pipes_" + timestamp + ".csv");
+
+        const std::string cStationFileName = readLine("Имя файла КС:", "cstations_" + timestamp + ".csv");
+
+        if (network.saveToFile(dirPath, pipeFileName, cStationFileName)) {
+            std::cout << "Сохранено:\n" << dirPath << "/" << pipeFileName << '\n' << dirPath << "/" << cStationFileName << '\n';
             break;
-        } else {
-            std::cerr << "[*] Ошибка сохранения\n";
         }
+
+        std::cerr << "[*] Ошибка сохранения\n";
     }
 
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
@@ -447,6 +531,96 @@ void Console::handleLoad() {
 
 
 
+Хэндлеры поиска
+
+
+
+*/
+
+void Console::handleSearchPipesByName() const {
+    clearConsole();
+
+    const std::string name = readLine("\nВведите имя для поиска: ");
+    const std::vector<const Pipe*> pipeList = network.searchPipesByName(name);
+
+    std::cout << "\n[Трубы]\n";
+    printPipeTableHeader();
+
+    if (pipeList.empty()) {
+        std::cout << "[!] Трубы с таким именем не найдены.\n";
+        return;
+    }
+
+    for (const Pipe* pipe : pipeList) {
+        printPipe(*pipe);
+    }
+}
+
+void Console::handleSearchPipesByRepair() const {
+    clearConsole();
+
+    const bool repairStatus = readBool("В ремонте?", false);
+    const std::vector<const Pipe*> pipeList = network.searchPipesByRepair(repairStatus);
+
+    std::cout << "\n[Трубы]\n";
+    printPipeTableHeader();
+
+    if (pipeList.empty()) {
+        std::cout << "[!] Трубы с статусом не найдены.\n";
+        return;
+    }
+
+    for (const Pipe* pipe : pipeList) {
+        printPipe(*pipe);
+    }
+};
+
+void Console::handleSearchCStationsByName() const {
+    clearConsole();
+
+    const std::string name = readLine("\nВведите имя для поиска: ");
+    const std::vector<const CompressorStation*> CStationList = network.searchCStationsByName(name);
+
+    std::cout << "\n[Компрессорные станции]\n";
+    printCSTableHeader();
+
+    if (CStationList.empty()) {
+        std::cout << "[!] КС с таким именем не найдены.\n";
+        return;
+    }
+
+    for (const CompressorStation* CStation : CStationList) {
+        printCS(*CStation);
+    }
+}
+
+void Console::handleSearchCStationsByActive() const {
+    clearConsole();
+
+    const std::vector<char> condition = readActiveSearch(
+        "Введите условие поиска (>50%, <5, =10): "
+    );
+
+    const std::vector<const CompressorStation*> CStationList = network.searchCStationsByActive(condition);
+
+    std::cout << "\n[Компрессорные станции]\n";
+    printCSTableHeader();
+
+    if (CStationList.empty()) {
+        std::cout << "[!] КС, подходящие под условие, не найдены.\n";
+        return;
+    }
+
+    for (const CompressorStation* CStation : CStationList) {
+        printCS(*CStation);
+    }
+}
+
+
+/*
+
+
+
 Принтеры
 
 
@@ -462,6 +636,14 @@ void Console::printMenu() const {
 
     std::cout << "0. Выход\n";
 }
+
+void Console::printMenuViewAll() const {
+    for (std::size_t i = 0; i < viewAllMenuItems.size(); ++i) {
+        std::cout << i + 1 << ". " << viewAllMenuItems[i] << '\n';
+    }
+
+    std::cout << "0. Выход\n";
+};
 
 void Console::printPipeTableHeader() const {
     std::cout << std::format("{:<6} | {:<10} | {:<8} | {:<8} | {:<8} | {:<12} | {}\n",

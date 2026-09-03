@@ -182,16 +182,10 @@ bool Network::editCStation(int id, int newNumWorkers, int newNumActiveWorkers, c
 
 
 
-bool Network::saveToFile(const std::string& dirPath) {
-    // Получаем время
-    const auto timestamp = getTimestamp();
+bool Network::saveToFile(const std::string& dirPath, const std::string& pipeFileName, const std::string& cStationFileName) {
+    const std::string pipePath = dirPath + "/" + pipeFileName;
+    const std::string cStationPath = dirPath + "/" + cStationFileName;
 
-    // Формируем пути к файлам
-    const std::string pipePath = dirPath + "/pipes_" + timestamp + ".csv";
-
-    const std::string cStationPath = dirPath + "/cstations_" + timestamp + ".csv";
-
-    // Открытие потоков записи
     std::ofstream pipeFile(pipePath);
     std::ofstream cStationFile(cStationPath);
 
@@ -199,7 +193,6 @@ bool Network::saveToFile(const std::string& dirPath) {
         return false;
     }
 
-    // Запись труб в файл
     pipeFile << "ID,Diameter,Length,Name,IsRepair,CStationFromId,CStationToId\n";
 
     for (const auto& pipe : pipeArray) {
@@ -212,7 +205,6 @@ bool Network::saveToFile(const std::string& dirPath) {
                  << pipe.getCStationToId() << '\n';
     }
 
-    // Запись КС в файл
     cStationFile << "ID,NumWorkers,NumActiveWorkers,Name,StationType\n";
 
     for (const auto& cStation : CStationArray) {
@@ -329,3 +321,155 @@ bool Network::loadFromFile(const std::string& pipePath, const std::string& cStat
 
     return true;
 }
+
+/*
+
+
+
+Поиск и фильтры
+
+
+
+*/
+
+
+std::vector<const Pipe*> Network::searchPipesByName(const std::string& name) const {
+
+    std::vector<const Pipe*> result {};
+    const std::string lowerName = getLowerString(name);
+
+    for (const Pipe& pipe : getPipeArray()) {
+        const std::string pipeName = getLowerString(pipe.getName());
+
+        // Проверка на не соотвествие длины (только если целевое имя длинее текущего)
+        if (name.size() > pipeName.size()) {
+            continue;
+        }
+
+        // Посимвольная проверка
+        bool matches = true;
+
+        for (size_t i = 0; i < name.size(); ++i) {
+            if (lowerName[i] != pipeName[i]) {
+                matches = false;
+                break;
+            }
+        }
+
+        if (matches) {
+            result.push_back(&pipe);
+        }
+
+    }
+
+    return result;
+}
+
+
+std::vector<const Pipe*> Network::searchPipesByRepair(bool isRepair) const {
+    std::vector<const Pipe*> result {};
+
+    for (const Pipe& pipe : getPipeArray()) {
+        const bool pipeRepairStatus = pipe.getRepair();
+
+        if (pipeRepairStatus == isRepair) {
+            result.push_back(&pipe);
+        }
+    }
+
+    return result;
+}
+
+std::vector<const CompressorStation*> Network::searchCStationsByName(const std::string& name) const {
+    std::vector<const CompressorStation*> result {};
+    const std::string lowerName = getLowerString(name);
+
+    for (const CompressorStation& CStation : getCStationArray()) {
+        const std::string CStationName = getLowerString(CStation.getName());
+
+        // Проверка на не соотвествие длины (только если целевое имя длинее текущего)
+        if (name.size() > CStationName.size()) {
+            continue;
+        }
+
+        bool matches = true;
+
+        // Посимвольная проверка
+        for (size_t i = 0; i < name.size(); ++i) {
+            if (lowerName[i] != CStationName[i]) {
+                matches = false;
+                break;
+            }
+        }
+
+        if (matches) {
+            result.push_back(&CStation);
+        }
+    }
+
+    return result;
+
+};
+
+std::vector<const CompressorStation*> Network::searchCStationsByActive(const std::vector<char>& condition) const {
+    std::vector<const CompressorStation*> result {};
+
+    // Получаем первый и последний символ, определяем знак сравнения и условие сравнивания
+    // Пример: >50% -> comparison == > ; searchByPercent == True
+    const char comparison = condition.front();
+    const bool searchByPercent = condition.back() == '%';
+
+    // Определение конца индекса цифры
+    const auto numberEnd = searchByPercent ? condition.end() - 1 : condition.end();
+
+    // Строчка хранящее число для сравнения
+    const std::string numberString(condition.begin() + 1, numberEnd);
+    // Эквивалент строчки в int
+    const int requestedValue = std::stoi(numberString);
+
+    for (const CompressorStation& CStation : getCStationArray()) {
+
+        const int totalWorkers = CStation.getNumWorkers();
+        const int activeWorkers = CStation.getNumActiveWorkers();
+
+        long long currentValue;
+        long long comparisonValue;
+
+        // Для сравнения процентов используем перекрёстное умножение:
+        //
+        // activeWorkers / totalWorkers * 100 <=> requestedValue
+        //
+        // activeWorkers * 100 / totalWorkers <=> requestedValue
+        //
+        // activeWorkers * 100 <=> requestedValue * totalWorkers
+        //
+        // currentValue = activeWorkers * 100
+        // comparisonValue = requestedValue * totalWorkers
+
+        // Иначе оставляем как есть
+        if (searchByPercent) {
+            currentValue = static_cast<long long>(activeWorkers) * 100;
+            comparisonValue = static_cast<long long>(requestedValue) * totalWorkers;
+        } else {
+            currentValue = activeWorkers;
+            comparisonValue = requestedValue;
+        }
+
+        bool matches = false;
+
+        // Сравнение
+        if (comparison == '>') {
+            matches = currentValue > comparisonValue;
+        } else if (comparison == '<') {
+            matches = currentValue < comparisonValue;
+        } else if (comparison == '=') {
+            matches = currentValue == comparisonValue;
+        }
+
+        if (matches) {
+            result.push_back(&CStation);
+        }
+    }
+
+    return result;
+};

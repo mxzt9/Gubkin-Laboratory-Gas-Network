@@ -23,6 +23,14 @@ private:
         "Загрузить",
     };
 
+    // Методы меню просмотра
+    const std::vector<std::string> viewAllMenuItems{
+        "Поиск труб названию",
+        "Поиск труб по статусу ремонта",
+        "Поиск КС по названию",
+        "Поиск КС по проценту/числу активных цехов"
+    };
+
     // Очистка консоли
     void clearConsole() const;
 
@@ -33,6 +41,7 @@ private:
     bool readBool(const std::string& prompt, bool defaultParam) const;
     StationType readStationType(StationType defaultParam) const;
     std::vector<int> readMultipleChoice(const std::string& prompt) const;
+    std::vector<char> readActiveSearch(const std::string& prompt) const;
 
     // Хэндлеры
     void handleAddPipe();
@@ -44,9 +53,17 @@ private:
     void handleDeleteCS();
     void handleSave();
     void handleLoad();
+
+    // Хэндлеры поиска
+    void handleSearchPipesByName() const;
+    void handleSearchPipesByRepair() const;
+    void handleSearchCStationsByName() const;
+    void handleSearchCStationsByActive() const;
     
     // Принтеры
     void printMenu() const;
+    void printMenuViewAll() const;
+
     void printPipeTableHeader() const;
     void printCSTableHeader() const;
     void printPipe(const Pipe& pipe) const;
