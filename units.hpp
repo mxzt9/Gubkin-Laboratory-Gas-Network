@@ -60,7 +60,9 @@ public:
     int getCStationFromId() const { return cStationFromId; }
     int getCStationToId() const { return cStationToId; }
 
-    bool isConnectedToCStation(int cStationId) const {
+    bool hasConnectedCStation() const { return cStationFromId != -1 || cStationToId != -1; }
+
+    bool isConnectedToCStationById(int cStationId) const {
         return cStationFromId == cStationId || cStationToId == cStationId;
     }
     

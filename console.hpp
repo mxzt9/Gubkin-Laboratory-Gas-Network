@@ -25,6 +25,7 @@ private:
         "Удалить КС",
         "Сохранить",
         "Загрузить",
+        "Присоединить трубу"
     };
 
     // Методы меню просмотра
@@ -57,6 +58,7 @@ private:
     void handleDeleteCS();
     void handleSave();
     void handleLoad();
+    void handleConnectPipe();
 
     // Хэндлеры поиска
     void handleSearchPipesByName() const;

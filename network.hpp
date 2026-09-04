@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -36,8 +37,8 @@ public:
 
     
     // Добавление
-    void addPipe(int diameter, int length, const std::string& name, bool isRepair = false);
-    void addCStation(int NW, int NAW, const std::string& name, StationType sType);
+    bool addPipe(int diameter, int length, const std::string& name, bool isRepair, int id = -1);
+    bool addCStation(int NW, int NAW, const std::string& name, StationType sType);
 
     // Удаление
     bool deletePipe(int id);
@@ -47,9 +48,14 @@ public:
     bool editPipe(int id, int newDiameter, int newLength, const std::string& newName, bool newIsRepair);
     bool editCStation(int id, int newNumWorkers, int newNumActiveWorkers, const std::string& newName, StationType newType);
 
+    // Присоединение трубы
+
+    bool connectPipe(int pipeId, int CStationFromId, int CStationToId);
+
     // Работа с файлами
-    bool saveToFile(const std::string& dirPath, const std::string& pipeFileName, const std::string& cStationFileName);
-    bool loadFromFile(const std::string& pipePath, const std::string& cStationPath);
+    bool saveToFile(const std::filesystem::path& dirPath, const std::filesystem::path& pipeFileName,
+                    const std::filesystem::path& cStationFileName);
+    bool loadFromFile(const std::filesystem::path& pipePath, const std::filesystem::path& cStationPath);
 
     // Поиск по фильтрам
     std::vector<const Pipe*> searchPipesByName(const std::string& name) const;

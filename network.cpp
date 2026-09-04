@@ -106,13 +106,41 @@ size_t Network::getCStationArrayLen() const {
 */
 
 
-void Network::addPipe(int diameter, int length, const std::string& name, bool isRepair) {
-    pipeArray.emplace_back(getNextPipeId(), diameter, length, name, isRepair);
+bool Network::addPipe(int diameter, int length, const std::string& name, bool isRepair, int id) {
+    // Проверка на то, есть переданный ID в массиве
+    if (id != -1 && isPipeInArrayById(id)) {
+        return false;
+    } 
+
+    if (id == -1) {
+        pipeArray.emplace_back(getNextPipeId(), diameter, length, name, isRepair);
+    } else {
+        pipeArray.emplace_back(id, diameter, length, name, isRepair);
+    }
+    return true;
 }
 
-void Network::addCStation(int numWorkers, int numActiveWorkers, const std::string& name, StationType stationType) {
+bool Network::addCStation(int numWorkers, int numActiveWorkers, const std::string& name, StationType stationType) {
     CStationArray.emplace_back(getNextCStationId(), numWorkers, numActiveWorkers, name, stationType);
+    return true;
 }
+
+bool Network::connectPipe(int pipeId, int CStationIdFrom, int CStationIdTo) {
+    if (!isPipeInArrayById(pipeId) || !isCStationInArrayById(CStationIdFrom) || !isCStationInArrayById(CStationIdTo) || CStationIdFrom == CStationIdTo) {
+        return false;
+    }
+
+    Pipe& pipe = getPipeById(pipeId);
+    if (pipe.hasConnectedCStation()) {
+        return false;
+    }
+
+    pipe.setCStationFromId(CStationIdFrom);
+    pipe.setCStationToId(CStationIdTo);
+
+    return true;
+}
+
 
 bool Network::deletePipe(int id) {
     if (!isPipeInArrayById(id)) {
@@ -135,7 +163,7 @@ bool Network::deleteCStation(int id) {
     }
 
     for (size_t i = 0; i < pipeArray.size(); ++i) {
-        if (pipeArray[i].isConnectedToCStation(id)) {
+        if (pipeArray[i].isConnectedToCStationById(id)) {
             pipeArray[i].disconnect();
         }
     }
@@ -182,9 +210,10 @@ bool Network::editCStation(int id, int newNumWorkers, int newNumActiveWorkers, c
 
 
 
-bool Network::saveToFile(const std::string& dirPath, const std::string& pipeFileName, const std::string& cStationFileName) {
-    const std::string pipePath = dirPath + "/" + pipeFileName;
-    const std::string cStationPath = dirPath + "/" + cStationFileName;
+bool Network::saveToFile(const std::filesystem::path& dirPath, const std::filesystem::path& pipeFileName,
+                         const std::filesystem::path& cStationFileName) {
+    const std::filesystem::path pipePath = dirPath / pipeFileName;
+    const std::filesystem::path cStationPath = dirPath / cStationFileName;
 
     std::ofstream pipeFile(pipePath);
     std::ofstream cStationFile(cStationPath);
@@ -218,11 +247,11 @@ bool Network::saveToFile(const std::string& dirPath, const std::string& pipeFile
     return pipeFile.good() && cStationFile.good();
 }
 
-bool Network::loadFromFile(const std::string& pipePath, const std::string& cStationPath) {
+bool Network::loadFromFile(const std::filesystem::path& pipePath, const std::filesystem::path& cStationPath) {
 
     // Открытие потоков чтения
-    std::ifstream pipeFile { std::filesystem::path(pipePath) };
-    std::ifstream cStationFile { std::filesystem::path(cStationPath) };
+    std::ifstream pipeFile { pipePath };
+    std::ifstream cStationFile { cStationPath };
 
     if (!pipeFile || !cStationFile) {
         return false;

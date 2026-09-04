@@ -574,6 +574,146 @@ void Console::handleLoad() {
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
+void Console::handleConnectPipe() {
+    clearConsole();
+
+    int CStationIdFrom {};
+
+    while (true) {
+        CStationIdFrom = readInt("ID КС начала трубы: ");
+
+        // Проверки
+        if (!network.isCStationInArrayById(CStationIdFrom)) {
+            std::cerr << "[!] КС с таким ID не найдена. Повторите ввод.\n";
+            continue;
+        }
+
+        bool isOccupied = false;
+        for (const auto& pipe : network.getPipeArray()) {
+            if (pipe.isConnectedToCStationById(CStationIdFrom)) {
+                isOccupied = true;
+                break;
+            }
+        }
+
+        if (isOccupied) {
+            logAction("Попытка выбрать занятую КС для начала трубы: ID=" + std::to_string(CStationIdFrom));
+            std::cerr << "[!] Эта КС уже занята другой трубой. Выберите свободную КС.\n";
+
+            continue;
+        }
+
+        break;
+    }
+
+    int CStationIdTo {};
+
+    while (true) {
+        CStationIdTo = readInt("ID КС конца трубы: ");
+
+        // Проверки
+        if (!network.isCStationInArrayById(CStationIdTo)) {
+            std::cerr << "[!] КС с таким ID не найдена. Повторите ввод.\n";
+            continue;
+        }
+
+        if (CStationIdTo == CStationIdFrom) {
+            std::cerr << "[!] Конечная КС должна отличаться от начальной. Повторите ввод.\n";
+            continue;
+        }
+
+        bool isOccupied = false;
+        for (const auto& pipe : network.getPipeArray()) {
+            if (pipe.isConnectedToCStationById(CStationIdTo)) {
+                isOccupied = true;
+                break;
+            }
+        }
+
+        if (isOccupied) {
+            logAction("Попытка выбрать занятую КС для конца трубы: ID=" + std::to_string(CStationIdTo));
+            std::cerr << "[!] Эта КС уже занята другой трубой. Выберите свободную КС.\n";
+
+            continue;
+        }
+
+        break;
+    }
+
+    const int targetDiameter = readInt("Диаметр трубы: ", -1, true);
+
+    // Проверка на наличие таких Id
+    if (!network.isCStationInArrayById(CStationIdFrom) || !network.isCStationInArrayById(CStationIdTo)) {
+        logAction("Ошибка присоединения трубы: одна или обе КС не найдены; начало=" + std::to_string(CStationIdFrom) + "; конец=" + std::to_string(CStationIdTo));
+        std::cerr << "[!] Ошибка: одна или обе компрессорные станции не найдены\n";
+        
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    } 
+
+    // Проверка на то, что Id КС не совпадают или равны -1
+    if (CStationIdFrom == CStationIdTo || CStationIdFrom == -1 || CStationIdTo == -1) {
+        logAction("Ошибка присоединения трубы: некорректная пара КС; начало=" + std::to_string(CStationIdFrom) + "; конец=" + std::to_string(CStationIdTo));
+        std::cerr << "[*] Ошибка: начало и конец трубы должны быть разными КС\n";
+        
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    }
+
+    // Поиск первой трубы с нужным ID
+    for (const auto& pipe : network.getPipeArray()) {
+        if (pipe.getDiameter() == targetDiameter && !pipe.hasConnectedCStation()) {
+            const int currentPipeId = pipe.getId();
+
+            // Проверка на ошибку добавления
+            if (!network.connectPipe(currentPipeId, CStationIdFrom, CStationIdTo)) {
+                logAction("Ошибка присоединения существующей трубы: ID=" + std::to_string(currentPipeId));
+                std::cerr << "[*] Ошибка: выбранную трубу не удалось присоединить\n";
+
+                break;
+            };
+
+            logAction("Труба присоединена: ID=" + std::to_string(currentPipeId) + "; КС " + std::to_string(CStationIdFrom) + " -> " + std::to_string(CStationIdTo));
+            std::cout << "Труба ID=" << currentPipeId << " соединяет КС " << CStationIdFrom << " и КС " << CStationIdTo << "\n";
+
+            readLine("\nНажмите Enter, чтобы вернуться в меню...");
+            return; 
+        }
+    }
+
+    
+    bool choice = readBool("[!] Трубы с таким диаметром не было найдено, хотите создать и присоединить?: ", false);
+    
+    if (!choice) {
+        logAction("Создание трубы для присоединения отменено: диаметр=" + std::to_string(targetDiameter));
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+
+        return;
+    }
+
+    const int defaultNameNum = network.getCurrentPipeId();
+    const std::string defaultName = "Pipe_" + std::to_string(defaultNameNum);
+
+    const int length = readInt("Длина (км): ", 100, true);
+    const std::string name = readValidName("Название: ", defaultName);
+
+    const int newPipeId = network.getNextPipeId();
+
+    if (!network.addPipe(targetDiameter, length, name, false, newPipeId)
+        || !network.connectPipe(newPipeId, CStationIdFrom, CStationIdTo)) {
+        logAction("Ошибка создания и присоединения трубы: ID=" + std::to_string(newPipeId));
+        std::cerr << "[*] Ошибка: не удалось создать и присоединить трубу\n";
+
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    }
+    
+    logAction("Труба создана и присоединена: ID=" + std::to_string(newPipeId) + "; КС " + std::to_string(CStationIdFrom) + " -> " + std::to_string(CStationIdTo));
+    std::cout << "Создана труба ID=" << newPipeId << ", соединяющая КС " << CStationIdFrom << " и КС " << CStationIdTo << "\n";
+    
+    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+}
+
 /*
 
 
@@ -767,6 +907,7 @@ void Console::run() {
                 case 7: handleDeleteCS(); break;
                 case 8: handleSave(); break;
                 case 9: handleLoad(); break;
+                case 10: handleConnectPipe(); break;
                 case 0:
                     logAction("Выход из программы");
                     running = false;
