@@ -1,6 +1,7 @@
 #pragma once
 
 #include "network.hpp"
+#include "log.hpp"
 
 class Console {
 private:
@@ -9,6 +10,9 @@ private:
     };
 
     Network& network;
+    Logger& logger;
+
+    void logAction(const std::string& message) const;
 
     // Пункты главного меню
     const std::vector<std::string> mainMenuItems{
@@ -70,6 +74,6 @@ private:
     void printCS(const CompressorStation& station) const;
 
 public:
-    Console(Network& network) : network(network) {};
+    Console(Network& network, Logger& logger) : network(network), logger(logger) {};
     void run();
 };
