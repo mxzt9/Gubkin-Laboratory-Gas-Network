@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <filesystem>
+#include <algorithm>
 
 #include "network.hpp"
 #include "utils.hpp"
@@ -36,46 +37,36 @@ int Network::getCurrentCStationId() const {
 }
 
 bool Network::isPipeInArrayById(int id) const {
-    for (size_t i = 0; i < pipeArray.size(); ++i) {
-        if (pipeArray[i].getId() == id) {
-            return true;
-        }
-    }
+    auto it = std::find_if(pipeArray.begin(), pipeArray.end(), [id](const auto& pipe) { return pipe.getId() == id; });
 
-    return false;
+    return it != pipeArray.end();
 }
 
 bool Network::isCStationInArrayById(int id) const {
-    for (size_t i = 0; i < CStationArray.size(); ++i) {
-        if (CStationArray[i].getId() == id) {
-            return true;
-        }
-    }
+    auto it = std::find_if(CStationArray.begin(), CStationArray.end(), [id](const auto& CStation) { return CStation.getId() == id; });
 
-    return false;
+    return it != CStationArray.end();
 }
 
 Pipe& Network::getPipeById(int id) {
-    for (size_t i = 0; i < pipeArray.size(); ++i) {
-        if (pipeArray[i].getId() == id) {
-            return pipeArray[i];
-        }
+    auto it = std::find_if(pipeArray.begin(), pipeArray.end(), [id](const auto& pipe) { return pipe.getId() == id; });
+
+    if (it == pipeArray.end()) { 
+        throw std::out_of_range("[*] Ошибка: Труба с ID= " + std::to_string(id) + " не найдена"); 
     }
 
-    std::string message_error { "Ошибка: Труба с ID= " + std::to_string(id) + " не найдена" };
-    throw std::out_of_range(message_error);
+    return *it;
 }
 
 
 CompressorStation& Network::getCStationById(int id) {
-    for (size_t i = 0; i < CStationArray.size(); ++i) {
-        if (CStationArray[i].getId() == id) {
-            return CStationArray[i];
-        }
-    }
-    std::string message_error { "Ошибка: КС с ID= " + std::to_string(id) + " не найдена" };
-    throw std::out_of_range(message_error);
+    auto it = std::find_if(CStationArray.begin(), CStationArray.end(), [id](const auto& station) { return station.getId() == id; });
 
+    if (it == CStationArray.end()) {
+        throw std::out_of_range("[*] Ошибка: КС с ID= " + std::to_string(id) + " не найдена");
+    }
+
+    return *it;
 }
 
 
@@ -87,11 +78,11 @@ const std::vector<CompressorStation>& Network::getCStationArray() const {
     return CStationArray;
 }
 
-size_t Network::getPipeArrayLen() const {
+std::size_t Network::getPipeArrayLen() const {
     return pipeArray.size();
 }
 
-size_t Network::getCStationArrayLen() const {
+std::size_t Network::getCStationArrayLen() const {
     return CStationArray.size();
 }
 
@@ -126,7 +117,7 @@ bool Network::addCStation(int numWorkers, int numActiveWorkers, const std::strin
 }
 
 bool Network::connectPipe(int pipeId, int CStationIdFrom, int CStationIdTo) {
-    if (!isPipeInArrayById(pipeId) || !isCStationInArrayById(CStationIdFrom) || !isCStationInArrayById(CStationIdTo) || CStationIdFrom == CStationIdTo) {
+    if (!isCStationInArrayById(CStationIdFrom) || !isCStationInArrayById(CStationIdTo) || CStationIdFrom == CStationIdTo) {
         return false;
     }
 
@@ -143,49 +134,25 @@ bool Network::connectPipe(int pipeId, int CStationIdFrom, int CStationIdTo) {
 
 
 bool Network::deletePipe(int id) {
-    if (!isPipeInArrayById(id)) {
-        return false;
-    }
-
-    for (size_t i = 0; i < pipeArray.size(); ++i) {
-        if (pipeArray[i].getId() == id) {
-            pipeArray.erase(pipeArray.begin() + i);
-            return true;
-        }
-    }
-
-    return false;
+    return std::erase_if(pipeArray, [id](const auto& pipe) { return pipe.getId() == id; }) == 1;
 }
 
 bool Network::deleteCStation(int id) {
-    if (!isCStationInArrayById(id)) {
-        return false;
-    }
-
-    for (size_t i = 0; i < pipeArray.size(); ++i) {
+    // Отсоединяем трубы от КС
+    for (std::size_t i = 0; i != pipeArray.size(); ++i) {
         if (pipeArray[i].isConnectedToCStationById(id)) {
             pipeArray[i].disconnect();
         }
     }
 
-    for (size_t i = 0; i < CStationArray.size(); ++i) {
-        if (CStationArray[i].getId() == id) {
-            CStationArray.erase(CStationArray.begin() + i);
-            return true;
-        }
-    }
-
-    return false;
+    return std::erase_if(CStationArray, [id](const auto& CStation) { return CStation.getId() == id; }) == 1;
 }
 
 
 
 bool Network::editPipe(int id, int newDiameter, int newLength, const std::string& newName, bool newIsRepair) {
-    if (!isPipeInArrayById(id)) {
-        return false;
-    }
-
     Pipe& pipe = getPipeById(id);
+
     pipe.setDiameter(newDiameter);
     pipe.setLength(newLength);
     pipe.setName(newName);
@@ -195,11 +162,12 @@ bool Network::editPipe(int id, int newDiameter, int newLength, const std::string
 }
 
 bool Network::editCStation(int id, int newNumWorkers, int newNumActiveWorkers, const std::string& newName, StationType newType) {
-    if (!isCStationInArrayById(id) || newNumActiveWorkers > newNumWorkers || newNumActiveWorkers < 0) {
+    if (newNumActiveWorkers > newNumWorkers || newNumActiveWorkers < 0) {
         return false;
     }
 
     CompressorStation& station = getCStationById(id);
+
     station.setNumWorkers(newNumWorkers);
     station.setNumActiveWorkers(newNumActiveWorkers);
     station.setName(newName);
@@ -210,8 +178,7 @@ bool Network::editCStation(int id, int newNumWorkers, int newNumActiveWorkers, c
 
 
 
-bool Network::saveToFile(const std::filesystem::path& dirPath, const std::filesystem::path& pipeFileName,
-                         const std::filesystem::path& cStationFileName) {
+bool Network::saveToFile(const std::filesystem::path& dirPath, const std::filesystem::path& pipeFileName, const std::filesystem::path& cStationFileName) {
     const std::filesystem::path pipePath = dirPath / pipeFileName;
     const std::filesystem::path cStationPath = dirPath / cStationFileName;
 
@@ -363,32 +330,13 @@ bool Network::loadFromFile(const std::filesystem::path& pipePath, const std::fil
 
 
 std::vector<const Pipe*> Network::searchPipesByName(const std::string& name) const {
-
-    std::vector<const Pipe*> result {};
+    std::vector<const Pipe*> result;
     const std::string lowerName = getLowerString(name);
 
-    for (const Pipe& pipe : getPipeArray()) {
-        const std::string pipeName = getLowerString(pipe.getName());
-
-        // Проверка на не соотвествие длины (только если целевое имя длинее текущего)
-        if (name.size() > pipeName.size()) {
-            continue;
-        }
-
-        // Посимвольная проверка
-        bool matches = true;
-
-        for (size_t i = 0; i < name.size(); ++i) {
-            if (lowerName[i] != pipeName[i]) {
-                matches = false;
-                break;
-            }
-        }
-
-        if (matches) {
+    for (const auto& pipe : pipeArray) {
+        if (getLowerString(pipe.getName()).starts_with(lowerName)) {
             result.push_back(&pipe);
         }
-
     }
 
     return result;
@@ -413,25 +361,8 @@ std::vector<const CompressorStation*> Network::searchCStationsByName(const std::
     std::vector<const CompressorStation*> result {};
     const std::string lowerName = getLowerString(name);
 
-    for (const CompressorStation& CStation : getCStationArray()) {
-        const std::string CStationName = getLowerString(CStation.getName());
-
-        // Проверка на не соотвествие длины (только если целевое имя длинее текущего)
-        if (name.size() > CStationName.size()) {
-            continue;
-        }
-
-        bool matches = true;
-
-        // Посимвольная проверка
-        for (size_t i = 0; i < name.size(); ++i) {
-            if (lowerName[i] != CStationName[i]) {
-                matches = false;
-                break;
-            }
-        }
-
-        if (matches) {
+    for (const auto& CStation : CStationArray) {
+        if (getLowerString(CStation.getName()).starts_with(lowerName)) {
             result.push_back(&CStation);
         }
     }
@@ -444,7 +375,7 @@ std::vector<const CompressorStation*> Network::searchCStationsByActive(const std
     std::vector<const CompressorStation*> result {};
 
     // Получаем первый и последний символ, определяем знак сравнения и условие сравнивания
-    // Пример: >50% -> comparison == > ; searchByPercent == True
+    // Пример: >50% -> comparison == '>' ; searchByPercent == true
     const char comparison = condition.front();
     const bool searchByPercent = condition.back() == '%';
 

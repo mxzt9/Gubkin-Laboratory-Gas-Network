@@ -183,7 +183,7 @@ std::vector<char> Console::readActiveSearch(const std::string& prompt) const {
         // Проверка на знак процента в конце строки
         const bool isPercent = input.back() == '%';
         // Индекс последней цифры
-        const size_t numberEnd = isPercent ? input.size() - 1 : input.size();
+        const std::size_t numberEnd = isPercent ? input.size() - 1 : input.size();
 
         // Проверка на некорректный ввод вида (>%)
         if (numberEnd == 1) {
@@ -308,15 +308,13 @@ void Console::handleViewAll() {
     logAction("Просмотрены все объекты: труб=" + std::to_string(network.getPipeArrayLen())
        + "; КС=" + std::to_string(network.getCStationArrayLen()));
 
-    std::cout << "\n────────────────────────────────────[Трубы]─────────────────────────────────────\n";
     printPipeTableHeader();
 
     for (const auto& pipe : network.getPipeArray()) {
         printPipe(pipe);
     }
 
-    std::cout << "\n\n────────────────────────────[Компрессорные станции]─────────────────────────────\n";
-    printCSTableHeader();
+    printCStationTableHeader();
 
     for (const auto& station : network.getCStationArray()) {
         printCS(station);
@@ -402,7 +400,7 @@ void Console::handleEditPipe() {
     }
 
     // Редактирование
-    for (size_t i = 0; i != ids.size(); ++i) {
+    for (std::size_t i = 0; i != ids.size(); ++i) {
         network.editPipe(ids[i], diameter, length, names[i], isRepair);
         logAction("Отредактирована труба ID=" + std::to_string(ids[i])
             + "; диаметр=" + std::to_string(diameter)
@@ -459,7 +457,7 @@ void Console::handleEditCStation() {
     }
 
     // Редактирование
-    for (size_t i = 0; i != ids.size(); ++i) {
+    for (std::size_t i = 0; i != ids.size(); ++i) {
         network.editCStation(ids[i], numWorkers, numActiveWorkers, names[i], type);
         logAction("Отредактирована КС ID=" + std::to_string(ids[i])
             + "; цехов=" + std::to_string(numWorkers)
@@ -578,6 +576,9 @@ void Console::handleConnectPipe() {
     clearConsole();
 
     int CStationIdFrom {};
+
+
+   
 
     while (true) {
         CStationIdFrom = readInt("ID КС начала трубы: ");
@@ -775,7 +776,7 @@ void Console::handleSearchCStationsByName() const {
         + "; найдено=" + std::to_string(CStationList.size()));
 
     std::cout << "\n[Компрессорные станции]\n";
-    printCSTableHeader();
+    printCStationTableHeader();
 
     if (CStationList.empty()) {
         std::cout << "[!] КС с таким именем не найдены.\n";
@@ -800,7 +801,7 @@ void Console::handleSearchCStationsByActive() const {
         + "; найдено=" + std::to_string(CStationList.size()));
 
     std::cout << "\n[Компрессорные станции]\n";
-    printCSTableHeader();
+    printCStationTableHeader();
 
     if (CStationList.empty()) {
         std::cout << "[!] КС, подходящие под условие, не найдены.\n";
@@ -842,19 +843,25 @@ void Console::printMenuViewAll() const {
 };
 
 void Console::printPipeTableHeader() const {
-    std::cout << std::format("{:<6} | {:<10} | {:<8} | {:<8} | {:<8} | {:<12} | {}\n",
+    std::cout << "\n                                    [Трубы]                                       ";
+    std::cout << "\n───────┬────────────┬──────────┬──────────┬──────────┬──────────────┬───────────\n";
+    std::cout << std::format("{:<6} │ {:<10} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {}\n",
         "Id", "Diameter", "Length", "Repair", "Name", "ID CS From", "ID CS To");
-    std::cout << "-------+------------+----------+----------+----------+--------------+-----------\n";
+    std::cout <<   "───────┼────────────┼──────────┼──────────┼──────────┼──────────────┼───────────\n";
+    
 }
 
-void Console::printCSTableHeader() const {
-    std::cout << std::format("{:<6} | {:<10} | {:<8} | {:<8} | {}\n",
+void Console::printCStationTableHeader() const {
+    std::cout << "\n                            [Компрессорные станции]                               ";
+    std::cout << "\n───────┬────────────┬──────────┬──────────┬─────────────────────────────────────\n";
+    std::cout << std::format("{:<6} │ {:<10} │ {:<8} │ {:<8} │ {}\n",
         "Id", "Workshops", "Active", "Type", "Name");
-    std::cout << "-------+------------+----------+----------+-------------------------------------\n";
+    std::cout << "───────┼────────────┼──────────┼──────────┼─────────────────────────────────────\n";
+    
 }
 
 void Console::printPipe(const Pipe& pipe) const {
-    std::cout << std::format("{:<6} | {:<10} | {:<8} | {:<8} | {:<8} | {:<12} | {}\n",
+    std::cout << std::format("{:<6} │ {:<10} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {}\n",
         pipe.getId(),
         pipe.getDiameter(),
         pipe.getLength(),
@@ -871,7 +878,7 @@ void Console::printCS(const CompressorStation& station) const {
     else if (station.getStationType() == StationType::Medium) { type = "Medium"; }
     else { type = "Heavy"; }
 
-    std::cout << std::format("{:<6} | {:<10} | {:<8} | {:<8} | {}\n",
+    std::cout << std::format("{:<6} │ {:<10} │ {:<8} │ {:<8} │ {}\n",
         station.getId(),
         station.getNumWorkers(),
         station.getNumActiveWorkers(),

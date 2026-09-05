@@ -71,7 +71,7 @@ private:
     void printMenuViewAll() const;
 
     void printPipeTableHeader() const;
-    void printCSTableHeader() const;
+    void printCStationTableHeader() const;
     void printPipe(const Pipe& pipe) const;
     void printCS(const CompressorStation& station) const;
 

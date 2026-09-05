@@ -32,8 +32,8 @@ public:
     const std::vector<Pipe>& getPipeArray() const;
     const std::vector<CompressorStation>& getCStationArray() const;
 
-    size_t getPipeArrayLen() const;
-    size_t getCStationArrayLen() const;
+    std::size_t getPipeArrayLen() const;
+    std::size_t getCStationArrayLen() const;
 
     
     // Добавление
