@@ -48,18 +48,8 @@ void Logger::close() {
     }
 }
 
-void Logger::addLine(const std::string& timestamp, const std::string& logText) {
-
-    // Добавление лога с датой в queue 
-    std::string escapedText = logText;
-    std::size_t quotePosition = 0;
-
-    while ((quotePosition = escapedText.find('"', quotePosition)) != std::string::npos) {
-        escapedText.insert(quotePosition, 1, '"');
-        quotePosition += 2;
-    }
-
-    logQueue.push(timestamp + ",\"" + escapedText + "\"");
+void Logger::addLine(const std::string& timestamp, std::string logText) {
+    logQueue.push(timestamp + "," + '\"' + logText + '\"');
     saveToFile();
 }
 
