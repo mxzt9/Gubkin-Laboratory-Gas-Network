@@ -17,6 +17,6 @@ public:
     bool open();          
     void close();         
 
-    void addLine(const std::string& timestamp, std::string logText);
+    void addLine(const std::string& timestamp, const std::string& logText);
     bool saveToFile();    
 };

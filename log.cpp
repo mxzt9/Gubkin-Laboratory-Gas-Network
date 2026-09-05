@@ -48,7 +48,7 @@ void Logger::close() {
     }
 }
 
-void Logger::addLine(const std::string& timestamp, std::string logText) {
+void Logger::addLine(const std::string& timestamp, const std::string& logText) {
     logQueue.push(timestamp + "," + '\"' + logText + '\"');
     saveToFile();
 }

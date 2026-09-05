@@ -575,71 +575,8 @@ void Console::handleLoad() {
 void Console::handleConnectPipe() {
     clearConsole();
 
-    int CStationIdFrom {};
-
-
-   
-
-    while (true) {
-        CStationIdFrom = readInt("ID КС начала трубы: ");
-
-        // Проверки
-        if (!network.isCStationInArrayById(CStationIdFrom)) {
-            std::cerr << "[!] КС с таким ID не найдена. Повторите ввод.\n";
-            continue;
-        }
-
-        bool isOccupied = false;
-        for (const auto& pipe : network.getPipeArray()) {
-            if (pipe.isConnectedToCStationById(CStationIdFrom)) {
-                isOccupied = true;
-                break;
-            }
-        }
-
-        if (isOccupied) {
-            logAction("Попытка выбрать занятую КС для начала трубы: ID=" + std::to_string(CStationIdFrom));
-            std::cerr << "[!] Эта КС уже занята другой трубой. Выберите свободную КС.\n";
-
-            continue;
-        }
-
-        break;
-    }
-
-    int CStationIdTo {};
-
-    while (true) {
-        CStationIdTo = readInt("ID КС конца трубы: ");
-
-        // Проверки
-        if (!network.isCStationInArrayById(CStationIdTo)) {
-            std::cerr << "[!] КС с таким ID не найдена. Повторите ввод.\n";
-            continue;
-        }
-
-        if (CStationIdTo == CStationIdFrom) {
-            std::cerr << "[!] Конечная КС должна отличаться от начальной. Повторите ввод.\n";
-            continue;
-        }
-
-        bool isOccupied = false;
-        for (const auto& pipe : network.getPipeArray()) {
-            if (pipe.isConnectedToCStationById(CStationIdTo)) {
-                isOccupied = true;
-                break;
-            }
-        }
-
-        if (isOccupied) {
-            logAction("Попытка выбрать занятую КС для конца трубы: ID=" + std::to_string(CStationIdTo));
-            std::cerr << "[!] Эта КС уже занята другой трубой. Выберите свободную КС.\n";
-
-            continue;
-        }
-
-        break;
-    }
+    int CStationIdFrom = readInt("ID КС начала трубы: ");
+    int CStationIdTo = readInt("ID КС конца трубы: ");
 
     const int targetDiameter = readInt("Диаметр трубы: ", -1, true);
 
