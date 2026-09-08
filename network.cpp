@@ -20,70 +20,12 @@
 
 */
 
-int Network::getNextPipeId() {
-    return currentPipeId++;
+const std::map<int, Pipe>& Network::getPipeMap() const {
+    return pipeMap;
 }
 
-int Network::getNextCStationId() {
-    return currentCStationId++;
-}
-
-int Network::getCurrentPipeId() const {
-    return currentPipeId;
-}
-
-int Network::getCurrentCStationId() const {
-    return currentCStationId;
-}
-
-bool Network::isPipeInArrayById(int id) const {
-    auto it = std::find_if(pipeArray.begin(), pipeArray.end(), [id](const auto& pipe) { return pipe.getId() == id; });
-
-    return it != pipeArray.end();
-}
-
-bool Network::isCStationInArrayById(int id) const {
-    auto it = std::find_if(CStationArray.begin(), CStationArray.end(), [id](const auto& CStation) { return CStation.getId() == id; });
-
-    return it != CStationArray.end();
-}
-
-Pipe& Network::getPipeById(int id) {
-    auto it = std::find_if(pipeArray.begin(), pipeArray.end(), [id](const auto& pipe) { return pipe.getId() == id; });
-
-    if (it == pipeArray.end()) { 
-        throw std::out_of_range("[*] Ошибка: Труба с ID= " + std::to_string(id) + " не найдена"); 
-    }
-
-    return *it;
-}
-
-
-CompressorStation& Network::getCStationById(int id) {
-    auto it = std::find_if(CStationArray.begin(), CStationArray.end(), [id](const auto& station) { return station.getId() == id; });
-
-    if (it == CStationArray.end()) {
-        throw std::out_of_range("[*] Ошибка: КС с ID= " + std::to_string(id) + " не найдена");
-    }
-
-    return *it;
-}
-
-
-const std::vector<Pipe>& Network::getPipeArray() const {
-    return pipeArray;
-}
-
-const std::vector<CompressorStation>& Network::getCStationArray() const {
-    return CStationArray;
-}
-
-std::size_t Network::getPipeArrayLen() const {
-    return pipeArray.size();
-}
-
-std::size_t Network::getCStationArrayLen() const {
-    return CStationArray.size();
+const std::map<int, CompressorStation>& Network::getCStationMap() const {
+    return CStationMap;
 }
 
 /*
@@ -98,222 +40,171 @@ std::size_t Network::getCStationArrayLen() const {
 
 
 bool Network::addPipe(int diameter, int length, const std::string& name, bool isRepair, int id) {
-    // Проверка на то, есть переданный ID в массиве
-    if (id != -1 && isPipeInArrayById(id)) {
-        return false;
-    } 
-
-    if (id == -1) {
-        pipeArray.emplace_back(getNextPipeId(), diameter, length, name, isRepair);
-    } else {
-        pipeArray.emplace_back(id, diameter, length, name, isRepair);
+    if (id == -1) { 
+        id = getNextPipeId();
     }
-    return true;
+    return pipeMap.try_emplace(id, diameter, length, name, isRepair).second;
 }
 
 bool Network::addCStation(int numWorkers, int numActiveWorkers, const std::string& name, StationType stationType) {
-    CStationArray.emplace_back(getNextCStationId(), numWorkers, numActiveWorkers, name, stationType);
-    return true;
+    const int id = getNextCStationId();
+    return CStationMap.try_emplace(id, numWorkers, numActiveWorkers, name, stationType).second;
 }
 
-bool Network::connectPipe(int pipeId, int CStationIdFrom, int CStationIdTo) {
-    if (!isCStationInArrayById(CStationIdFrom) || !isCStationInArrayById(CStationIdTo) || CStationIdFrom == CStationIdTo) {
+bool Network::connectPipe(int pipeId, int fromId, int toId) {
+    if (!pipeMap.contains(pipeId) || !CStationMap.contains(fromId) || !CStationMap.contains(toId) || fromId == toId) return false;
+
+    Pipe& pipe = pipeMap.at(pipeId);
+    if (pipe.getCStationFromId() != -1 && pipe.getCStationToId() != -1) {
         return false;
     }
 
-    Pipe& pipe = getPipeById(pipeId);
-    if (pipe.hasConnectedCStation()) {
-        return false;
-    }
-
-    pipe.setCStationFromId(CStationIdFrom);
-    pipe.setCStationToId(CStationIdTo);
-
+    pipe.connect(fromId, toId);
     return true;
 }
-
 
 bool Network::deletePipe(int id) {
-    return std::erase_if(pipeArray, [id](const auto& pipe) { return pipe.getId() == id; }) == 1;
+    return pipeMap.erase(id) != 0;
 }
 
 bool Network::deleteCStation(int id) {
-    // Отсоединяем трубы от КС
-    for (std::size_t i = 0; i != pipeArray.size(); ++i) {
-        if (pipeArray[i].isConnectedToCStationById(id)) {
-            pipeArray[i].disconnect();
+    if (!CStationMap.contains(id)) { 
+        return false; 
+    }
+
+    for (auto& [pipeId, pipe] : pipeMap) {
+        if (pipe.getCStationFromId() != -1 && pipe.getCStationToId() != -1) { 
+            pipe.disconnect();
         }
     }
 
-    return std::erase_if(CStationArray, [id](const auto& CStation) { return CStation.getId() == id; }) == 1;
-}
-
-
-
-bool Network::editPipe(int id, int newDiameter, int newLength, const std::string& newName, bool newIsRepair) {
-    Pipe& pipe = getPipeById(id);
-
-    pipe.setDiameter(newDiameter);
-    pipe.setLength(newLength);
-    pipe.setName(newName);
-    pipe.setRepair(newIsRepair);
-
+    CStationMap.erase(id);
     return true;
 }
 
-bool Network::editCStation(int id, int newNumWorkers, int newNumActiveWorkers, const std::string& newName, StationType newType) {
-    if (newNumActiveWorkers > newNumWorkers || newNumActiveWorkers < 0) {
-        return false;
-    }
-
-    CompressorStation& station = getCStationById(id);
-
-    station.setNumWorkers(newNumWorkers);
-    station.setNumActiveWorkers(newNumActiveWorkers);
-    station.setName(newName);
-    station.setStationType(newType);
-
-    return true;
-}
-
-
-
-bool Network::saveToFile(const std::filesystem::path& dirPath, const std::filesystem::path& pipeFileName, const std::filesystem::path& cStationFileName) {
-    const std::filesystem::path pipePath = dirPath / pipeFileName;
-    const std::filesystem::path cStationPath = dirPath / cStationFileName;
-
-    std::ofstream pipeFile(pipePath);
-    std::ofstream cStationFile(cStationPath);
-
-    if (!pipeFile || !cStationFile) {
-        return false;
-    }
-
-    pipeFile << "ID,Diameter,Length,Name,IsRepair,CStationFromId,CStationToId\n";
-
-    for (const auto& pipe : pipeArray) {
-        pipeFile << pipe.getId() << ','
-                 << pipe.getDiameter() << ','
-                 << pipe.getLength() << ','
-                 << pipe.getName() << ','
-                 << pipe.getRepair() << ','
-                 << pipe.getCStationFromId() << ','
-                 << pipe.getCStationToId() << '\n';
-    }
-
-    cStationFile << "ID,NumWorkers,NumActiveWorkers,Name,StationType\n";
-
-    for (const auto& cStation : CStationArray) {
-        cStationFile << cStation.getId() << ','
-                     << cStation.getNumWorkers() << ','
-                     << cStation.getNumActiveWorkers() << ','
-                     << cStation.getName() << ','
-                     << static_cast<int>(cStation.getStationType()) << '\n';
-    }
-
-    return pipeFile.good() && cStationFile.good();
-}
-
-bool Network::loadFromFile(const std::filesystem::path& pipePath, const std::filesystem::path& cStationPath) {
-
-    // Открытие потоков чтения
-    std::ifstream pipeFile { pipePath };
-    std::ifstream cStationFile { cStationPath };
-
-    if (!pipeFile || !cStationFile) {
-        return false;
-    }
-
-    Network loadedNetwork;
-    std::string line;
-
+bool Network::editPipe(int id, bool newIsRepair) {
     try {
-        // Чтение заголовка
-        if (!std::getline(cStationFile, line)) {
-            return false;
-        }
-
-        // Чтение КС
-        while (std::getline(cStationFile, line)) {
-            if (line.empty()) {
-                continue;
-            }
-
-            // Массив значений
-            const auto tokens = splitCsvLine(line);
-            if (tokens.size() != 5) {
-                return false;
-            }
-
-            // Преобразование и добавление в массив
-            const int id = std::stoi(tokens[0]);
-            const int workers = std::stoi(tokens[1]);
-            const int activeWorkers = std::stoi(tokens[2]);
-            const int type = std::stoi(tokens[4]);
-
-            loadedNetwork.CStationArray.emplace_back(id, workers, activeWorkers, tokens[3], static_cast<StationType>(type));
-        }
-
-        // Чтение заголовка
-        if (!std::getline(pipeFile, line)) {
-            return false;
-        }
-
-        // Чтение труб
-        while (std::getline(pipeFile, line)) {
-            if (line.empty()) {
-                continue;
-            }
-
-            // Массив значений
-            const auto tokens = splitCsvLine(line);
-            if (tokens.size() != 7) {
-                return false;
-            }
-
-            // Преобразование и добавление в массив
-            const int id = std::stoi(tokens[0]);
-            const int diameter = std::stoi(tokens[1]);
-            const int length = std::stoi(tokens[2]);
-            const int repair = std::stoi(tokens[4]);
-            const int fromId = std::stoi(tokens[5]);
-            const int toId = std::stoi(tokens[6]);
-
-            loadedNetwork.pipeArray.emplace_back(id, diameter, length, tokens[3], repair == 1);
-
-            // Ссылка на только что добавленную трубу
-            Pipe& pipe = loadedNetwork.pipeArray.back();
-
-            // Проверка на то, есть ли у трубы есть подключенные КС
-            if (fromId != -1 && toId != -1) {
-                // Проверка на наличие КС с такими id
-                if (!loadedNetwork.isCStationInArrayById(fromId)|| !loadedNetwork.isCStationInArrayById(toId)) {
-                    return false;
-                }
-
-                pipe.setCStationFromId(fromId);
-                pipe.setCStationToId(toId);
-            }
-        }
-    } catch (const std::exception&) {
+        Pipe& pipe = pipeMap.at(id);
+        pipe.setRepair(newIsRepair);
+        return true;
+    }
+    catch (const std::out_of_range&) {
         return false;
+    }
+}
+
+bool Network::editCStation(int id, int newNumActiveWorkers) {
+    try {
+        CompressorStation& station = CStationMap.at(id);
+
+        if (newNumActiveWorkers > station.getNumWorkers() || newNumActiveWorkers < 0) {
+            return false;
+        }
+        station.setNumActiveWorkers(newNumActiveWorkers);
+        return true;
+
+    }
+    catch (const std::out_of_range&) {
+        return false;
+    }
+}
+
+
+bool Network::saveToFile(const std::filesystem::path& filePath) {
+    std::ofstream file(filePath);
+    if (!file) return false;
+
+    file << CStationMap.size() << '\n';
+
+    for (const auto& [id, station] : CStationMap) {
+        file << id << '\n' << station.getName() << '\n'
+            << station.getNumWorkers() << '\n' << station.getNumActiveWorkers() << '\n'
+            << static_cast<int>(station.getStationType()) << '\n';
+    }
+
+    file << pipeMap.size() << '\n';
+
+    for (const auto& [id, pipe] : pipeMap) {
+        file << id << '\n' << pipe.getName() << '\n'
+            << pipe.getDiameter() << '\n' << pipe.getLength() << '\n'
+            << pipe.getRepair() << '\n' << pipe.getCStationFromId() << '\n'
+            << pipe.getCStationToId() << '\n';
+    }
+
+    return file.good();
+}
+
+bool Network::loadFromFile(const std::filesystem::path& filePath) {
+    std::ifstream file(filePath);
+    int count;
+
+    if (!(file >> count) || count < 0) {
+        return false;
+    }
+
+    std::map<int, Pipe> newPipeMap;
+    std::map<int, CompressorStation> newCStationMap;
+    
+    int newPipeId = 0;
+    int newCStationId = 0;
+
+    // Сначала читаем КС, чтобы затем присоединить к ним трубы.
+    for (int i = 0; i < count; ++i) {
+        int id, workers, active, type;
+        std::string name;
+
+        if (!(file >> id)) {
+            return false;
+        }
+        newCStationId = id + 1;
+
+        file.ignore(); // Перенос строки после ID.
+
+        if (!std::getline(file, name) || !(file >> workers >> active >> type)) {
+            return false;
+        }
+
+        if (!newCStationMap.try_emplace(id, workers, active, name, static_cast<StationType>(type)).second) {
+            return false;
+        }
+
+    }
+
+    if (!(file >> count) || count < 0) {
+        return false;
+    }
+
+    for (int i = 0; i < count; ++i) {
+        int id, diameter, length, from, to;
+        bool repair;
+        std::string name;
+
+        if (!(file >> id)) {
+            return false;
+        }
+        newPipeId = id + 1;
+
+        file.ignore();
+
+        if (!std::getline(file, name) || !(file >> diameter >> length >> repair >> from >> to)) {
+            return false;
+        }
+        if (!newPipeMap.try_emplace(id, diameter, length, name, repair).second) {
+            return false;
+        }
+        if (from != -1 || to != -1) {
+            if (!newCStationMap.contains(from) || !newCStationMap.contains(to) || from == to) {
+                return false;
+            }
+            newPipeMap.at(id).connect(from, to);
+        }
     }
     
-    CStationArray = std::move(loadedNetwork.CStationArray);
-    pipeArray = std::move(loadedNetwork.pipeArray);
 
-    // Сопостовление Id
-    if (!pipeArray.empty()) {
-        currentPipeId = pipeArray.back().getId() + 1;
-    } else {
-        currentPipeId = 0;
-    }
-
-    if (!CStationArray.empty()) {
-        currentCStationId = CStationArray.back().getId() + 1;
-    } else {
-        currentCStationId = 0;
-    }
+    pipeMap = newPipeMap;
+    CStationMap = newCStationMap;
+    currentPipeId = newPipeId;
+    currentCStationId = newCStationId;
 
     return true;
 }
@@ -329,13 +220,13 @@ bool Network::loadFromFile(const std::filesystem::path& pipePath, const std::fil
 */
 
 
-std::vector<const Pipe*> Network::searchPipesByName(const std::string& name) const {
-    std::vector<const Pipe*> result;
+std::vector<int> Network::searchPipesByName(const std::string& name) const {
+    std::vector<int> result;
     const std::string lowerName = getLowerString(name);
 
-    for (const auto& pipe : pipeArray) {
+    for (const auto& [pipe_id, pipe] : pipeMap) {
         if (getLowerString(pipe.getName()).starts_with(lowerName)) {
-            result.push_back(&pipe);
+            result.push_back(pipe_id);
         }
     }
 
@@ -343,36 +234,34 @@ std::vector<const Pipe*> Network::searchPipesByName(const std::string& name) con
 }
 
 
-std::vector<const Pipe*> Network::searchPipesByRepair(bool isRepair) const {
-    std::vector<const Pipe*> result {};
+std::vector<int> Network::searchPipesByRepair(bool isRepair) const {
+    std::vector<int> result;
 
-    for (const Pipe& pipe : getPipeArray()) {
-        const bool pipeRepairStatus = pipe.getRepair();
-
-        if (pipeRepairStatus == isRepair) {
-            result.push_back(&pipe);
+    for (const auto& [pipe_id, pipe] : pipeMap) {
+        if (pipe.getRepair() == isRepair) {
+            result.push_back(pipe_id);
         }
     }
 
     return result;
 }
 
-std::vector<const CompressorStation*> Network::searchCStationsByName(const std::string& name) const {
-    std::vector<const CompressorStation*> result {};
+std::vector<int> Network::searchCStationsByName(const std::string& name) const {
+    std::vector<int> result;
     const std::string lowerName = getLowerString(name);
 
-    for (const auto& CStation : CStationArray) {
+    for (const auto& [CStation_id, CStation] : CStationMap) {
         if (getLowerString(CStation.getName()).starts_with(lowerName)) {
-            result.push_back(&CStation);
+            result.push_back(CStation_id);
         }
     }
 
     return result;
 
-};
+}
 
-std::vector<const CompressorStation*> Network::searchCStationsByActive(const std::vector<char>& condition) const {
-    std::vector<const CompressorStation*> result {};
+std::vector<int> Network::searchCStationsByActive(const std::vector<char>& condition) const {
+    std::vector<int> result {};
 
     // Получаем первый и последний символ, определяем знак сравнения и условие сравнивания
     // Пример: >50% -> comparison == '>' ; searchByPercent == true
@@ -387,7 +276,7 @@ std::vector<const CompressorStation*> Network::searchCStationsByActive(const std
     // Эквивалент строчки в int
     const int requestedValue = std::stoi(numberString);
 
-    for (const CompressorStation& CStation : getCStationArray()) {
+    for (const auto& [CStation_id, CStation] : CStationMap) {
 
         const int totalWorkers = CStation.getNumWorkers();
         const int activeWorkers = CStation.getNumActiveWorkers();
@@ -397,16 +286,12 @@ std::vector<const CompressorStation*> Network::searchCStationsByActive(const std
 
         // Для сравнения процентов используем перекрёстное умножение:
         //
-        // activeWorkers / totalWorkers * 100 <=> requestedValue
-        //
         // activeWorkers * 100 / totalWorkers <=> requestedValue
         //
         // activeWorkers * 100 <=> requestedValue * totalWorkers
         //
         // currentValue = activeWorkers * 100
         // comparisonValue = requestedValue * totalWorkers
-
-        // Иначе оставляем как есть
         if (searchByPercent) {
             currentValue = static_cast<long long>(activeWorkers) * 100;
             comparisonValue = static_cast<long long>(requestedValue) * totalWorkers;
@@ -427,7 +312,7 @@ std::vector<const CompressorStation*> Network::searchCStationsByActive(const std
         }
 
         if (matches) {
-            result.push_back(&CStation);
+            result.push_back(CStation_id);
         }
     }
 

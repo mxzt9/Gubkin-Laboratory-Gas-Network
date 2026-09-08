@@ -30,7 +30,7 @@ private:
 
     // Методы меню просмотра
     const std::vector<std::string> viewAllMenuItems{
-        "Поиск труб названию",
+        "Поиск труб по названию",
         "Поиск труб по статусу ремонта",
         "Поиск КС по названию",
         "Поиск КС по проценту/числу активных цехов"
@@ -72,8 +72,8 @@ private:
 
     void printPipeTableHeader() const;
     void printCStationTableHeader() const;
-    void printPipe(const Pipe& pipe) const;
-    void printCS(const CompressorStation& station) const;
+    void printPipe(int id, const Pipe& pipe) const;
+    void printCS(int id, const CompressorStation& CStation) const;
 
 public:
     Console(Network& network, Logger& logger) : network(network), logger(logger) {};

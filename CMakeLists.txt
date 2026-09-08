@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
         main.cpp
         units.hpp
         utils.hpp
+        utils.cpp
         network.hpp
         network.cpp
         console.hpp

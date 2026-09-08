@@ -64,7 +64,7 @@ std::string Console::readValidName(const std::string& prompt, std::string defaul
             return value;
         }
 
-        std::cerr << "[*] Ошибка: название не должно быть пустым и содержать запятые или управляющие символы.\n";
+        std::cerr << "[*] Ошибка: название не должно быть пустым и содержать управляющие символы.\n";
     }
 }
 
@@ -140,7 +140,7 @@ std::vector<int> Console::readMultipleChoice(const std::string& prompt) const {
         std::set<int> unique_ids;
         std::stringstream stringStream(input);
         std::string token;
-        bool hasError = false;
+        bool hasError = input.back() == ',';
 
         while (std::getline(stringStream, token, ',')) {
             if (token.empty()) {
@@ -204,8 +204,8 @@ std::vector<char> Console::readActiveSearch(const std::string& prompt) const {
             continue;
         }
 
-        if (isPercent && value > 100) {
-            std::cerr << "[*] Ошибка: Процент должен быть от 0 до 100\n";
+        if (value < 0 || (isPercent && value > 100)) {
+            std::cerr << "[*] Ошибка: Число должно быть неотрицательным, процент - от 0 до 100\n";
             continue;
         }
 
@@ -225,9 +225,7 @@ std::vector<char> Console::readActiveSearch(const std::string& prompt) const {
 
 // Добавление 
 void Console::handleAddPipe() {
-    clearConsole();
-
-    const int defaultNameNum = network.getCurrentPipeId();
+    const int defaultNameNum = network.currentPipeId;
     const std::string defaultName = "Pipe_" + std::to_string(defaultNameNum);
 
     const int diameter = readInt("Диаметр (мм): ", 500, true);
@@ -236,41 +234,37 @@ void Console::handleAddPipe() {
     const std::string name = readValidName("Название: ", defaultName);
     const int num = readInt("Сколько труб добавить: ", 1, true);
 
+    int added = 0;
+
     for (int i = 0; i < num; ++i) {
-        if (name == defaultName) {
-            network.addPipe(diameter, length, "Pipe_" + std::to_string(network.getCurrentPipeId()), isRepair);
-        } else {
-            network.addPipe(diameter, length, name, isRepair);
+        const int id = network.currentPipeId;
+        const std::string actualName = name == defaultName ? "Pipe_" + std::to_string(id) : name;
+        if (!network.addPipe(diameter, length, actualName, isRepair)) {
+            logAction("Ошибка добавления трубы: ID=" + std::to_string(id));
+            std::cerr << "[!] Не удалось добавить трубу.\n";
+            break;
         }
-    }
 
-    logAction("Добавлены трубы: количество=" + std::to_string(num)
-        + "; диаметр=" + std::to_string(diameter)
-        + "; длина=" + std::to_string(length)
-        + "; ремонт=" + std::to_string(isRepair)
-        + "; имя=" + name);
+        ++added;
 
-    if (num == 1) {
-        std::cout << "\n\n[Труба добавлена]\n";
+        logAction("Добавлена труба: ID=" + std::to_string(id) + "; имя=" + actualName
+            + "; диаметр=" + std::to_string(diameter) + "; длина=" + std::to_string(length)
+            + "; ремонт=" + (isRepair ? "да" : "нет"));
     }
-    else {
-        std::cout << "\n\n[Трубы добавлены]\n";
-    }
+    std::cout << "Добавлено труб: " << added << " из " << num << "\n";
 
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
 void Console::handleAddCS() {
-    clearConsole();
-
-    const int defaultNameNum = network.getCurrentCStationId();
+    const int defaultNameNum = network.currentCStationId;
     const std::string defaultName = "CStation_" + std::to_string(defaultNameNum);
 
     const int numWorkers = readInt("Количество цехов: ", 10, true);
     int numActiveWorkers = readInt("Количество цехов в работе: ", numWorkers);
 
-    while (numActiveWorkers > numWorkers) {
-        std::cout << "[*] Ошибка: Количество активных цехов не может превышать общее.\n";
+    while (numActiveWorkers < 0 || numActiveWorkers > numWorkers) {
+        std::cout << "[*] Ошибка: Количество активных цехов должно быть от 0 до общего числа цехов.\n";
         numActiveWorkers = readInt("Количество цехов в работе: ", numWorkers);
     }
 
@@ -278,77 +272,73 @@ void Console::handleAddCS() {
     const StationType type = readStationType(StationType::Light);
     const int num = readInt("Сколько КС добавить: ", 1, true);
 
+    int added = 0;
     for (int i = 0; i < num; ++i) {
-        if (name == defaultName) {
-            network.addCStation(numWorkers, numActiveWorkers, "CStation_" + std::to_string(network.getCurrentCStationId()), type);
-        } else {
-            network.addCStation(numWorkers, numActiveWorkers, name, type);
+        const int id = network.currentCStationId;
+
+        const std::string actualName = name == defaultName ? "CStation_" + std::to_string(id) : name;
+
+        if (!network.addCStation(numWorkers, numActiveWorkers, actualName, type)) {
+            logAction("Ошибка добавления КС: ID=" + std::to_string(id));
+            std::cerr << "[!] Не удалось добавить КС.\n";
+            break;
         }
-    }
 
-    logAction("Добавлены КС: количество=" + std::to_string(num)
-        + "; цехов=" + std::to_string(numWorkers)
-        + "; активных цехов=" + std::to_string(numActiveWorkers)
-        + "; класс=" + std::to_string(static_cast<int>(type))
-        + "; имя=" + name);
+        ++added;
 
-    if (num == 1) {
-        std::cout << "\n\n[КС добавлена]\n";
+        logAction("Добавлена КС: ID=" + std::to_string(id) + "; имя=" + actualName
+            + "; цехов=" + std::to_string(numWorkers) + "; активных=" + std::to_string(numActiveWorkers)
+            + "; класс=" + std::to_string(static_cast<int>(type)));
     }
-    else {
-        std::cout << "\n\n[КС добавлены]\n";
-    }
-
+    std::cout << "Добавлено КС: " << added << " из " << num << "\n";
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
 void Console::handleViewAll() {
-    clearConsole();
-
-    logAction("Просмотрены все объекты: труб=" + std::to_string(network.getPipeArrayLen())
-       + "; КС=" + std::to_string(network.getCStationArrayLen()));
+    logAction("Просмотрены все объекты");
 
     printPipeTableHeader();
 
-    for (const auto& pipe : network.getPipeArray()) {
-        printPipe(pipe);
+    for (const auto& [pipe_id, pipe] : network.getPipeMap()) {
+        printPipe(pipe_id, pipe);
     }
 
     printCStationTableHeader();
 
-    for (const auto& station : network.getCStationArray()) {
-        printCS(station);
+    for (const auto& [CStation_id, CStation] : network.getCStationMap()) {
+        printCS(CStation_id, CStation);
     }
 
     std::cout << "\n\n";
 
 
-
     printMenuViewAll();
-
     switch (readInt("Выбор: ")) {
         case 1: {
+            clearConsole();
             handleSearchPipesByName();
             readLine("\nНажмите Enter, чтобы продолжить...");
             break;
         }
         case 2: {
+            clearConsole();
             handleSearchPipesByRepair();
             readLine("\nНажмите Enter, чтобы продолжить...");
             break;
         }
         case 3: {
+            clearConsole();
             handleSearchCStationsByName();
             readLine("\nНажмите Enter, чтобы продолжить...");
             break;
         }
         case 4: {
+            clearConsole();
             handleSearchCStationsByActive();
             readLine("\nНажмите Enter, чтобы продолжить...");
             break;
         }
         case 0:
-            logAction("Закрыто меню просмотра");
             return;
         default: {
             logAction("Выбран несуществующий пункт меню просмотра");
@@ -362,192 +352,136 @@ void Console::handleViewAll() {
 
 // Редактирование
 void Console::handleEditPipe() {
-    clearConsole();
-
-    // Проверка на наличие труб
-    if (network.getPipeArrayLen() == 0) {
+    if (network.getPipeMap().empty()) {
         logAction("Редактирование труб невозможно: список пуст");
-        readLine("[!] Нет труб для редактирования.\nНажмите Enter, чтобы вернуться в меню...");
+        readLine("Нет труб для редактирования. Нажмите Enter, чтобы вернуться в меню...");
         return;
     }
 
-    // Чтение выбора труб для редактирования
-    const std::vector<int> ids = readMultipleChoice("ID труб/трубы (В форматах 1/1,2,3): ");
+    const auto ids = readMultipleChoice("ID труб через запятую: ");
 
-    // Проверка на наличие труб с такими Id
-    for (const int id : ids) {
-        if (!network.isPipeInArrayById(id)) {
-            logAction("Редактирование труб отменено: не найден ID=" + std::to_string(id));
-            std::cout << "[*] Ошибка: Нет трубы с ID=" << id << "\n";
-            readLine("\nНажмите Enter, чтобы вернуться в меню...");
-            return;
+    int edited = 0;
+
+    for (int id : ids) {
+        if (!network.getPipeMap().contains(id)) {
+            std::cout << "Труба ID=" << id << " не найдена, пропущена.\n";
+
+            logAction("Редактирование пропущено: труба ID=" + std::to_string(id) + " не найдена");
+            continue;
+        }
+
+        const bool repair = readBool("Труба ID=" + std::to_string(id) + " в ремонте?", network.getPipeMap().at(id).getRepair());
+        
+        if (network.editPipe(id, repair)) {
+            ++edited;
+
+            const std::string message = "Труба ID=" + std::to_string(id) + ": статус ремонта установлен - " + (repair ? "в ремонте" : "не в ремонте");
+
+            logAction(message);
+            std::cout << message << '\n';
         }
     }
-
-    // Чтение прошлых и новых значений Трубы с первым Id
-    const Pipe& oldPipe = network.getPipeById(ids[0]);
-
-    const int diameter = readInt("Новый диаметр (мм): ", oldPipe.getDiameter(), true);
-    const int length = readInt("Новая длина (км): ", oldPipe.getLength(), true);
-    const bool isRepair = readBool("В ремонте?", oldPipe.getRepair());
-
-    // Чтение новых имён
-    std::vector<std::string> names;
-
-    for (const int id : ids) {
-        const Pipe& pipe = network.getPipeById(id);
-        names.push_back(readValidName("Название трубы ID=" + std::to_string(id) + ": ", pipe.getName()));
-    }
-
-    // Редактирование
-    for (std::size_t i = 0; i != ids.size(); ++i) {
-        network.editPipe(ids[i], diameter, length, names[i], isRepair);
-        logAction("Отредактирована труба ID=" + std::to_string(ids[i])
-            + "; диаметр=" + std::to_string(diameter)
-            + "; длина=" + std::to_string(length)
-            + "; ремонт=" + (isRepair ? "да" : "нет")
-            + "; имя=" + names[i]);
-    }
-
-    std::cout << "\n[Трубы отредактированы]\n";
+    std::cout << "Обработано труб: " << edited << " из " << ids.size() << '\n';
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
 void Console::handleEditCStation() {
-    clearConsole();
-
-    // Проверка на наличие КС
-    if (network.getCStationArrayLen() == 0) {
+    if (network.getCStationMap().empty()) {
         logAction("Редактирование КС невозможно: список пуст");
-        readLine("[!] Нет КС для редактирования.\nНажмите Enter, чтобы вернуться в меню...");
+        readLine("Нет КС для редактирования. Нажмите Enter, чтобы вернуться в меню...");
         return;
     }
 
-    // Проверка на наличие КС с такими Id
-    const std::vector<int> ids = readMultipleChoice("ID КС (В форматах 1/1,2,3): ");
+    const auto ids = readMultipleChoice("ID КС через запятую: ");
 
-    for (const int id : ids) {
-        if (!network.isCStationInArrayById(id)) {
-            logAction("Редактирование КС отменено: не найден ID=" + std::to_string(id));
-            std::cout << "Ошибка: Нет КС с ID=" << id << "\n";
-            readLine("\nНажмите Enter, чтобы вернуться в меню...");
-            return;
-        }
-    }
-
-    // Чтение прошлых и новых значений КС с первым Id
-    const CompressorStation& oldCStation = network.getCStationById(ids[0]);
-
-    const int numWorkers = readInt("Количество цехов: ", oldCStation.getNumWorkers(), true);
-    int numActiveWorkers = readInt("Количество цехов в работе: ", oldCStation.getNumActiveWorkers());
-
-    while (numActiveWorkers > numWorkers) {
-        std::cout << "Количество активных цехов не может превышать общее.\n";
-        numActiveWorkers = readInt("Количество цехов в работе: ", numWorkers);
-    }
+    int edited = 0;
     
-    const StationType type = readStationType(oldCStation.getStationType());
-
-    // Чтение новых имён
-    std::vector<std::string> names;
-
-    for (const int id : ids) {
-        const CompressorStation& station = network.getCStationById(id);
-        names.push_back(readValidName("Название КС ID=" + std::to_string(id) + ": ", station.getName()));
-    }
-
-    // Редактирование
-    for (std::size_t i = 0; i != ids.size(); ++i) {
-        network.editCStation(ids[i], numWorkers, numActiveWorkers, names[i], type);
-        logAction("Отредактирована КС ID=" + std::to_string(ids[i])
-            + "; цехов=" + std::to_string(numWorkers)
-            + "; активных цехов=" + std::to_string(numActiveWorkers)
-            + "; класс=" + std::to_string(static_cast<int>(type))
-            + "; имя=" + names[i]);
-    }
-
-    std::cout << "\n[КС отредактированы]\n";
-    readLine("\nНажмите Enter, чтобы вернуться в меню...");
-}
-
-
-// Удаление 
-void Console::handleDeletePipe() {
-    clearConsole();
-
-    if (network.getPipeArrayLen() == 0) {
-        logAction("Удаление труб невозможно: список пуст");
-        readLine("Нет труб для удаления.\nНажмите Enter, чтобы вернуться в меню...");
-        return;
-    }
-
-    const std::vector<int> ids = readMultipleChoice("ID труб/трубы для удаления (В форматах 1/1,2,3): ");
-
-    for (const auto& id : ids) {
-        if (!network.isPipeInArrayById(id)) {
-            logAction("Труба не удалена: не найден ID=" + std::to_string(id));
-            std::cout << "Ошибка: Нет трубы с ID=" << id << "\n";
+    for (int id : ids) {
+        if (!network.getCStationMap().contains(id)) {
+            std::cout << "КС ID=" << id << " не найдена, пропущена.\n";
+            logAction("Редактирование пропущено: КС ID=" + std::to_string(id) + " не найдена");
             continue;
         }
 
-        network.deletePipe(id);
-        logAction("Удалена труба ID=" + std::to_string(id));
-        std::cout << "Труба с ID=" << id << " удалена\n";
+        const auto& station = network.getCStationMap().at(id);
+        int active;
 
+        do {
+            active = readInt("КС ID=" + std::to_string(id) + ": активных цехов (от 0 до " + std::to_string(station.getNumWorkers()) + "):", station.getNumActiveWorkers());
+            
+            if (active < 0 || active > station.getNumWorkers()) {
+                std::cerr << "[!] Количество активных цехов вне допустимого диапазона.\n";
+            }
+
+        } while (active < 0 || active > station.getNumWorkers());
+        
+        if (network.editCStation(id, active)) {
+            ++edited;
+
+            const std::string message = "КС ID=" + std::to_string(id) + ": установлено активных цехов - " + std::to_string(active);
+            
+            logAction(message);
+            std::cout << message << '\n';
+        }
+    }
+    std::cout << "Обработано КС: " << edited << " из " << ids.size() << '\n';
+    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+}
+
+void Console::handleDeletePipe() {
+    if (network.getPipeMap().empty()) {
+        logAction("Удаление труб невозможно: список пуст");
+        readLine("Нет труб для удаления. Нажмите Enter, чтобы вернуться в меню...");
+        return;
     }
 
+    const auto ids = readMultipleChoice("ID труб для удаления через запятую: ");
+
+    for (int id : ids) {
+        const bool removed = network.deletePipe(id);
+        
+        const std::string message = "Труба ID=" + std::to_string(id) + (removed ? " удалена" : " не найдена, удаление пропущено");
+
+        logAction(message);
+        std::cout << message << '\n';
+    }
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
 void Console::handleDeleteCS() {
-    clearConsole();
-
-    if (network.getCStationArrayLen() == 0) {
+    if (network.getCStationMap().empty()) {
         logAction("Удаление КС невозможно: список пуст");
-        readLine("Нет КС для удаления.\nНажмите Enter, чтобы вернуться в меню...");
+        readLine("Нет КС для удаления. Нажмите Enter, чтобы вернуться в меню...");
         return;
     }
 
-    const std::vector<int> ids = readMultipleChoice("ID КС для удаления (В форматах 1/1,2,3): ");
+    const auto ids = readMultipleChoice("ID КС для удаления через запятую: ");
 
-    for (const auto& id : ids) {
-        if (!network.isCStationInArrayById(id)) {
-            logAction("КС не удалена: не найден ID=" + std::to_string(id));
-            std::cout << "Ошибка: Нет КС с ID=" << id << "\n";
-            continue;
-        }
-        network.deleteCStation(id);
-        logAction("Удалена КС ID=" + std::to_string(id));
-        std::cout << "КС с ID=" << id << " удалена\n";
+    for (int id : ids) {
+        const bool removed = network.deleteCStation(id);
+        const std::string message = "КС ID=" + std::to_string(id) + (removed ? " удалена; связанные трубы отсоединены" : " не найдена, удаление пропущено");
+
+        logAction(message);
+        std::cout << message << '\n';
     }
-
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
-
 
 void Console::handleSave() {
     clearConsole();
 
     while (true) {
-        const std::string timestamp = getTimestamp();
+        const std::string path = readLine("Путь к файлу сети:", "data/network_" + getTimestamp() + ".txt");
 
-        const std::string dirPath = readLine("Путь к папке сохранения:", "data");
-
-        const std::string pipeFileName = readLine("Имя файла труб:", "pipes_" + timestamp + ".csv");
-
-        const std::string cStationFileName = readLine("Имя файла КС:", "cstations_" + timestamp + ".csv");
-
-        if (network.saveToFile(dirPath, pipeFileName, cStationFileName)) {
-            logAction("Данные сохранены: трубы=" + dirPath + "/" + pipeFileName
-                + "; КС=" + dirPath + "/" + cStationFileName);
-            std::cout << "Сохранено:\n" << dirPath << "/" << pipeFileName << '\n' << dirPath << "/" << cStationFileName << '\n';
+        if (network.saveToFile(path)) {
+            logAction("Сеть сохранена: файл=" + path);
+            std::cout << "Трубы и КС сохранены в " << path << '\n';
             break;
         }
 
-        logAction("Ошибка сохранения данных: каталог=" + dirPath);
-        std::cerr << "[*] Ошибка сохранения\n";
+        logAction("Ошибка сохранения сети: файл=" + path);
+        std::cerr << "[!] Не удалось сохранить сеть. Проверьте путь и доступ к файлу.\n";
     }
-
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
@@ -555,20 +489,17 @@ void Console::handleLoad() {
     clearConsole();
 
     while (true) {
-        const std::string pipePath = readLine("Полный путь к файлу труб: ");
+        const std::string path = readLine("Путь к файлу сети:");
 
-        const std::string cStationPath = readLine("Полный путь к файлу КС: ");
-
-        if (network.loadFromFile(pipePath, cStationPath)) {
-            logAction("Данные загружены: трубы=" + pipePath + "; КС=" + cStationPath);
-            std::cout << "Загружено\n";
+        if (network.loadFromFile(path)) {
+            logAction("Сеть загружена: файл=" + path);
+            std::cout << "Текущая сеть заменена данными из " << path << '\n';
             break;
-        } else {
-            logAction("Ошибка загрузки данных: трубы=" + pipePath + "; КС=" + cStationPath);
-            std::cerr << "[*] Ошибка загрузки: проверьте пути и формат файлов\n";
         }
+        
+        logAction("Ошибка загрузки сети: файл=" + path);
+        std::cerr << "[!] Проверьте путь и формат файла. Текущая сеть не изменена.\n";
     }
-
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
@@ -581,7 +512,7 @@ void Console::handleConnectPipe() {
     const int targetDiameter = readInt("Диаметр трубы: ", -1, true);
 
     // Проверка на наличие таких Id
-    if (!network.isCStationInArrayById(CStationIdFrom) || !network.isCStationInArrayById(CStationIdTo)) {
+    if (!network.getCStationMap().contains(CStationIdFrom) || !network.getCStationMap().contains(CStationIdTo)) {
         logAction("Ошибка присоединения трубы: одна или обе КС не найдены; начало=" + std::to_string(CStationIdFrom) + "; конец=" + std::to_string(CStationIdTo));
         std::cerr << "[!] Ошибка: одна или обе компрессорные станции не найдены\n";
         
@@ -598,10 +529,10 @@ void Console::handleConnectPipe() {
         return;
     }
 
-    // Поиск первой трубы с нужным ID
-    for (const auto& pipe : network.getPipeArray()) {
-        if (pipe.getDiameter() == targetDiameter && !pipe.hasConnectedCStation()) {
-            const int currentPipeId = pipe.getId();
+    // Поиск свободной трубы нужного диаметра
+    for (const auto& [pipeId, pipe] : network.getPipeMap()) {
+        if (pipe.getDiameter() == targetDiameter && !(pipe.getCStationFromId() != -1 && pipe.getCStationToId())) {
+            const int currentPipeId = pipeId;
 
             // Проверка на ошибку добавления
             if (!network.connectPipe(currentPipeId, CStationIdFrom, CStationIdTo)) {
@@ -612,7 +543,7 @@ void Console::handleConnectPipe() {
             };
 
             logAction("Труба присоединена: ID=" + std::to_string(currentPipeId) + "; КС " + std::to_string(CStationIdFrom) + " -> " + std::to_string(CStationIdTo));
-            std::cout << "Труба ID=" << currentPipeId << " соединяет КС " << CStationIdFrom << " и КС " << CStationIdTo << "\n";
+            std::cout << "Труба ID=" << currentPipeId << " соединяет КС " << CStationIdFrom << " -> КС " << CStationIdTo << "\n";
 
             readLine("\nНажмите Enter, чтобы вернуться в меню...");
             return; 
@@ -620,7 +551,7 @@ void Console::handleConnectPipe() {
     }
 
     
-    bool choice = readBool("[!] Трубы с таким диаметром не было найдено, хотите создать и присоединить?: ", false);
+    bool choice = readBool("[!] Свободная труба нужного диаметра не найдена. Создать и присоединить?: ", false);
     
     if (!choice) {
         logAction("Создание трубы для присоединения отменено: диаметр=" + std::to_string(targetDiameter));
@@ -629,7 +560,7 @@ void Console::handleConnectPipe() {
         return;
     }
 
-    const int defaultNameNum = network.getCurrentPipeId();
+    const int defaultNameNum = network.currentPipeId;
     const std::string defaultName = "Pipe_" + std::to_string(defaultNameNum);
 
     const int length = readInt("Длина (км): ", 100, true);
@@ -637,8 +568,7 @@ void Console::handleConnectPipe() {
 
     const int newPipeId = network.getNextPipeId();
 
-    if (!network.addPipe(targetDiameter, length, name, false, newPipeId)
-        || !network.connectPipe(newPipeId, CStationIdFrom, CStationIdTo)) {
+    if (!network.addPipe(targetDiameter, length, name, false, newPipeId) || !network.connectPipe(newPipeId, CStationIdFrom, CStationIdTo)) {
         logAction("Ошибка создания и присоединения трубы: ID=" + std::to_string(newPipeId));
         std::cerr << "[*] Ошибка: не удалось создать и присоединить трубу\n";
 
@@ -647,7 +577,7 @@ void Console::handleConnectPipe() {
     }
     
     logAction("Труба создана и присоединена: ID=" + std::to_string(newPipeId) + "; КС " + std::to_string(CStationIdFrom) + " -> " + std::to_string(CStationIdTo));
-    std::cout << "Создана труба ID=" << newPipeId << ", соединяющая КС " << CStationIdFrom << " и КС " << CStationIdTo << "\n";
+    std::cout << "Создана труба ID=" << newPipeId << ", соединяющая КС " << CStationIdFrom << " -> КС " << CStationIdTo << "\n";
     
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
@@ -663,90 +593,84 @@ void Console::handleConnectPipe() {
 */
 
 void Console::handleSearchPipesByName() const {
-    clearConsole();
-
-    const std::string name = readLine("\nВведите имя для поиска: ");
-    const std::vector<const Pipe*> pipeList = network.searchPipesByName(name);
+    const std::string name = readLine("\nВведите начало названия для поиска: ");
+    const std::vector<int> pipeList = network.searchPipesByName(name);
     logAction("Поиск труб по имени: запрос=" + name
         + "; найдено=" + std::to_string(pipeList.size()));
 
-    std::cout << "\n[Трубы]\n";
-    printPipeTableHeader();
-
+        
     if (pipeList.empty()) {
         std::cout << "[!] Трубы с таким именем не найдены.\n";
         return;
     }
 
-    for (const Pipe* pipe : pipeList) {
-        printPipe(*pipe);
+    printPipeTableHeader();
+
+    for (const int id : pipeList) {
+        printPipe(id, network.getPipeMap().at(id));
     }
 }
 
 void Console::handleSearchPipesByRepair() const {
-    clearConsole();
-
     const bool repairStatus = readBool("В ремонте?", false);
-    const std::vector<const Pipe*> pipeList = network.searchPipesByRepair(repairStatus);
+    const std::vector<int> pipeList = network.searchPipesByRepair(repairStatus);
     logAction("Поиск труб по ремонту: ремонт=" + std::string(repairStatus ? "да" : "нет")
         + "; найдено=" + std::to_string(pipeList.size()));
 
-    std::cout << "\n[Трубы]\n";
-    printPipeTableHeader();
-
+        
     if (pipeList.empty()) {
-        std::cout << "[!] Трубы с статусом не найдены.\n";
+        std::cout << "[!] Трубы с указанным статусом не найдены.\n";
         return;
     }
 
-    for (const Pipe* pipe : pipeList) {
-        printPipe(*pipe);
+    printPipeTableHeader();
+
+    for (const int id : pipeList) {
+        printPipe(id, network.getPipeMap().at(id));
     }
 };
 
 void Console::handleSearchCStationsByName() const {
-    clearConsole();
-
-    const std::string name = readLine("\nВведите имя для поиска: ");
-    const std::vector<const CompressorStation*> CStationList = network.searchCStationsByName(name);
+    const std::string name = readLine("\nВведите начало названия для поиска: ");
+    const std::vector<int> CStationList = network.searchCStationsByName(name);
     logAction("Поиск КС по имени: запрос=" + name
         + "; найдено=" + std::to_string(CStationList.size()));
 
-    std::cout << "\n[Компрессорные станции]\n";
-    printCStationTableHeader();
-
+        
     if (CStationList.empty()) {
         std::cout << "[!] КС с таким именем не найдены.\n";
         return;
     }
 
-    for (const CompressorStation* CStation : CStationList) {
-        printCS(*CStation);
+    printCStationTableHeader();
+
+    for (const int id : CStationList) {
+        printCS(id, network.getCStationMap().at(id));
     }
+
 }
 
 void Console::handleSearchCStationsByActive() const {
-    clearConsole();
-
     const std::vector<char> condition = readActiveSearch(
         "Введите условие поиска (>50%, <5, =10): "
     );
 
-    const std::vector<const CompressorStation*> CStationList = network.searchCStationsByActive(condition);
-    logAction("Поиск КС по активным цехам: условие="
-        + std::string(condition.begin(), condition.end())
-        + "; найдено=" + std::to_string(CStationList.size()));
-
-    std::cout << "\n[Компрессорные станции]\n";
-    printCStationTableHeader();
+    const std::vector<int> CStationList = network.searchCStationsByActive(condition);
 
     if (CStationList.empty()) {
         std::cout << "[!] КС, подходящие под условие, не найдены.\n";
         return;
     }
+    
+    logAction("Поиск КС по активным цехам: условие="
+        + std::string(condition.begin(), condition.end())
+        + "; найдено=" + std::to_string(CStationList.size()));
 
-    for (const CompressorStation* CStation : CStationList) {
-        printCS(*CStation);
+    printCStationTableHeader();
+
+
+    for (const int id : CStationList) {
+        printCS(id, network.getCStationMap().at(id));
     }
 }
 
@@ -797,9 +721,9 @@ void Console::printCStationTableHeader() const {
     
 }
 
-void Console::printPipe(const Pipe& pipe) const {
+void Console::printPipe(int id, const Pipe& pipe) const {
     std::cout << std::format("{:<6} │ {:<10} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {}\n",
-        pipe.getId(),
+        id,
         pipe.getDiameter(),
         pipe.getLength(),
         pipe.getRepair() ? "yes" : "no",
@@ -808,19 +732,19 @@ void Console::printPipe(const Pipe& pipe) const {
         pipe.getCStationToId() == -1 ? "None" : std::to_string(pipe.getCStationToId()));
 }
 
-void Console::printCS(const CompressorStation& station) const {
+void Console::printCS(int id, const CompressorStation& CStation) const {
     std::string type;
 
-    if (station.getStationType() == StationType::Light) { type = "Light"; }
-    else if (station.getStationType() == StationType::Medium) { type = "Medium"; }
+    if (CStation.getStationType() == StationType::Light) { type = "Light"; }
+    else if (CStation.getStationType() == StationType::Medium) { type = "Medium"; }
     else { type = "Heavy"; }
 
     std::cout << std::format("{:<6} │ {:<10} │ {:<8} │ {:<8} │ {}\n",
-        station.getId(),
-        station.getNumWorkers(),
-        station.getNumActiveWorkers(),
+        id,
+        CStation.getNumWorkers(),
+        CStation.getNumActiveWorkers(),
         type,
-        station.getName());
+        CStation.getName());
 }
 
 /*
@@ -842,16 +766,16 @@ void Console::run() {
 
         try {
             switch (readInt("\nExit - в любом действии, чтобы вернуться в меню.\nВыбор: ", -1)) {
-                case 1: handleAddPipe(); break;
-                case 2: handleAddCS(); break;
-                case 3: handleViewAll(); break;
-                case 4: handleEditPipe(); break;
-                case 5: handleEditCStation(); break;
-                case 6: handleDeletePipe(); break;
-                case 7: handleDeleteCS(); break;
-                case 8: handleSave(); break;
-                case 9: handleLoad(); break;
-                case 10: handleConnectPipe(); break;
+                case 1:  clearConsole(); handleAddPipe(); break;
+                case 2:  clearConsole(); handleAddCS(); break;
+                case 3:  clearConsole(); handleViewAll(); break;
+                case 4:  clearConsole(); handleEditPipe(); break;
+                case 5:  clearConsole(); handleEditCStation(); break;
+                case 6:  clearConsole(); handleDeletePipe(); break;
+                case 7:  clearConsole(); handleDeleteCS(); break;
+                case 8:  clearConsole(); handleSave(); break;
+                case 9:  clearConsole(); handleLoad(); break;
+                case 10: clearConsole(); handleConnectPipe(); break;
                 case 0:
                     logAction("Выход из программы");
                     running = false;
@@ -863,7 +787,12 @@ void Console::run() {
                     break;
             }
         } catch (InputCommand) {
-            logAction("Текущее действие отменено пользователем");
+            if (!std::cin) {
+                logAction("Выход из программы: поток ввода закрыт");
+                running = false;
+            } else {
+                logAction("Возврат в меню по команде Exit; выполненные изменения сохранены");
+            }
         }
     }
 }
