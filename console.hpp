@@ -25,7 +25,8 @@ private:
         "Удалить КС",
         "Сохранить",
         "Загрузить",
-        "Присоединить трубу"
+        "Присоединить трубу",
+        "Топологическая сортировка"
     };
 
     // Методы меню просмотра
@@ -59,6 +60,7 @@ private:
     void handleSave();
     void handleLoad();
     void handleConnectPipe();
+    void handleTopologicalSort();
 
     // Хэндлеры поиска
     void handleSearchPipesByName() const;

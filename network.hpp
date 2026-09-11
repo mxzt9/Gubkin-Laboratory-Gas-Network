@@ -9,9 +9,8 @@
 
 class Network {
 private:
-
-std::map<int, Pipe> pipeMap {};
-std::map<int, CompressorStation> CStationMap {};
+    std::map<int, Pipe> pipeMap {};
+    std::map<int, CompressorStation> CStationMap {};
 
 public:
     int currentPipeId {};
@@ -49,5 +48,8 @@ public:
 
     std::vector<int> searchCStationsByName(const std::string& name) const;
     std::vector<int> searchCStationsByActive(const std::vector<char>& condition) const;
+
+    // Топологическая сортировка
+    bool topologicalSort(std::vector<int>& result) const;
 
 };

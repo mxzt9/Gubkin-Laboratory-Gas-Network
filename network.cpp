@@ -3,6 +3,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <queue>
 
 #include "network.hpp"
 #include "utils.hpp"
@@ -73,7 +74,7 @@ bool Network::deleteCStation(int id) {
     }
 
     for (auto& [pipeId, pipe] : pipeMap) {
-        if (pipe.getCStationFromId() != -1 && pipe.getCStationToId() != -1) { 
+        if (pipe.getCStationFromId() != id  || pipe.getCStationToId() != id) { 
             pipe.disconnect();
         }
     }
@@ -318,3 +319,72 @@ std::vector<int> Network::searchCStationsByActive(const std::vector<char>& condi
 
     return result;
 };
+
+bool Network::topologicalSort(std::vector<int>& result) const {
+    // Очистка массива
+    result.clear();
+
+    // Массив вида {id КС: степень входящих в нее соединений} 
+    std::map<int, int> in_degree;
+
+    // Массив вида {id КС: Id КС-соседей}
+    std::map<int, std::vector<int>> graph;
+
+    // Строим граф
+    for (const auto& [pipe_id, pipe] : pipeMap) {
+        // Получение id
+        int from = pipe.getCStationFromId();
+        int to = pipe.getCStationToId();
+
+        // Пропуск не подключенных труб
+        if (from == -1 || to == -1) {
+            continue;
+        }
+
+        // Добавляем вершины, если их ещё нет
+        in_degree.try_emplace(from, 0);
+        in_degree.try_emplace(to, 0);
+
+        // Увеличиваем степень вершины
+        in_degree[to]++;
+
+        // Добавляем соединение
+        graph[from].push_back(to);
+    }
+
+
+    std::queue<int> queue;
+
+    // Добавляем в очередь вершины с отсуствующими входными подключениями
+    for (const auto& [CStation_id, degree] : in_degree) {
+        if (degree == 0) {
+            queue.push(CStation_id);
+        }
+    }
+
+
+    while (!queue.empty()) {
+
+        // Получаем первый id
+        int currentId = queue.front();
+
+        // Удаляем его
+        queue.pop();
+
+        // Добавляем в результирующий массив
+        result.push_back(currentId);
+
+        // Удаляем исходящие рёбра текущей вершины
+        for (int nextId : graph[currentId]) {
+            in_degree[nextId]--;
+
+            // Если у отсоединенной вершины количество ребер стало ноль добавляем в очередь
+            if (in_degree[nextId] == 0) {
+                queue.push(nextId);
+            }
+        }
+    }
+
+    // Проверка на наличие петли, если размеры не совпадут -> false
+    return result.size() == in_degree.size();
+}

@@ -531,7 +531,7 @@ void Console::handleConnectPipe() {
 
     // Поиск свободной трубы нужного диаметра
     for (const auto& [pipeId, pipe] : network.getPipeMap()) {
-        if (pipe.getDiameter() == targetDiameter && !(pipe.getCStationFromId() != -1 && pipe.getCStationToId())) {
+        if (pipe.getDiameter() == targetDiameter && !(pipe.getCStationFromId() != -1 && pipe.getCStationToId() != -1)) {
             const int currentPipeId = pipeId;
 
             // Проверка на ошибку добавления
@@ -674,6 +674,21 @@ void Console::handleSearchCStationsByActive() const {
     }
 }
 
+void Console::handleTopologicalSort() {
+    std::vector<int> result;
+
+    if (!network.topologicalSort(result)) {
+        std::cerr << "[*] Ошибка: В графе присутствует петля - сортировка невозможна";
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    }
+
+    std::cout << "Топологически отсортированный массив:\n";
+    for (const auto& id : result) {
+        std::cout << id << " ";
+    }
+    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+}
 
 /*
 
@@ -776,6 +791,7 @@ void Console::run() {
                 case 8:  clearConsole(); handleSave(); break;
                 case 9:  clearConsole(); handleLoad(); break;
                 case 10: clearConsole(); handleConnectPipe(); break;
+                case 11: clearConsole(); handleTopologicalSort(); break;
                 case 0:
                     logAction("Выход из программы");
                     running = false;
