@@ -729,7 +729,7 @@ void Console::handleFindShortestPath() {
 
     
     for (size_t i = 1; i != result.size(); ++i) {
-        std::cout << std::format("КС {} -> КС {} | Длина: {}\n",
+        std::cout << std::format("КС {} -> КС {:<4} |   Длина: {}\n",
             result[i - 1].id,
             result[i].id,
             result[i].distance
@@ -756,10 +756,10 @@ void Console::printMenu() const {
     clearConsole();
 
     for (std::size_t i = 0; i < mainMenuItems.size(); ++i) {
-        std::cout << i + 1 << ". " << mainMenuItems[i] << '\n';
+        std::cout << std::format("{:<4}{}\n", std::format("{}.", i + 1), mainMenuItems[i]);
     }
 
-    std::cout << "0. Выход\n";
+    std::cout << std::format("{:<4}{}\n", "0.", "Выход");
 }
 
 void Console::printMenuViewAll() const {
