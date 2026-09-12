@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <queue>
+#include <set>
 
 #include "network.hpp"
 #include "utils.hpp"
@@ -387,4 +388,145 @@ bool Network::topologicalSort(std::vector<int>& result) const {
 
     // Проверка на наличие петли, если размеры не совпадут -> false
     return result.size() == in_degree.size();
+}
+
+
+
+bool Network::findShortestPath(int startId, int finishId, std::vector<Edge>& result) const {
+    struct QueueNode {
+        int id {};
+        int distance {};
+
+        bool operator<(const QueueNode& other) const {
+            if (distance == other.distance) {
+                return id < other.id;
+            }
+
+            return distance < other.distance;
+        }
+    };
+
+    result.clear();
+
+    // Массив вида {id КС: минимальное расстояние от начальной КС}
+    std::map<int, int> distances;
+
+    // Массив вида {id КС: id предыдущей КС}
+    std::map<int, int> previousIds;
+
+    // Массив вида {id КС: длина ребра от предыдущей КС}
+    std::map<int, int> previousDistances;
+
+    // Массив вида {id КС: Id КС-соседей, расстояние до них}
+    std::map<int, std::vector<Edge>> graph;
+
+    // Строим граф
+    for (const auto& [pipe_id, pipe] : pipeMap) {
+        int from = pipe.getCStationFromId();
+        int to = pipe.getCStationToId();
+
+        // Пропуск неподключенных труб
+        if (from == -1 || to == -1) {
+            continue;
+        }
+
+        int distance = pipe.getLength();
+
+        graph[from].push_back(Edge{to, distance});
+    }
+
+    // Заполняем расстояния до всех КС бесконечностью
+    for (const auto& [CStation_id, station] : CStationMap) {
+        distances[CStation_id] = INT_MAX;
+    }
+
+    // Проверка существования начальной КС
+    if (distances.find(startId) == distances.end()) {
+        return false;
+    }
+
+    // Проверка существования конечной КС
+    if (distances.find(finishId) == distances.end()) {
+        return false;
+    }
+
+    // Расстояние от начальной вершины до самой себя
+    distances[startId] = 0;
+
+    std::set<QueueNode> queue;
+
+    queue.insert(QueueNode{startId, 0});
+
+    while (!queue.empty()) {
+        auto currentNode = queue.begin();
+
+        int currentId = currentNode->id;
+        int currentDistance = currentNode->distance;
+
+        queue.erase(currentNode);
+
+        // Если дошли до конечной КС
+        if (currentId == finishId) {
+            break;
+        }
+
+        // Если у КС нет соседей
+        if (graph.find(currentId) == graph.end()) {
+            continue;
+        }
+
+        // Перебираем соседей текущей КС
+        for (const auto& edge : graph.at(currentId)) {
+            int neighbourId = edge.id;
+            int edgeDistance = edge.distance;
+
+            int newDistance = currentDistance + edgeDistance;
+
+            // Если нашли более короткий путь
+            if (newDistance < distances[neighbourId]) {
+                // Если вершина уже была в очереди,
+                // удаляем её старое значение
+                if (distances[neighbourId] != INT_MAX) {
+                    queue.erase(QueueNode{neighbourId, distances[neighbourId]});
+                }
+
+                // Обновляем минимальное расстояние
+                distances[neighbourId] = newDistance;
+
+                // Запоминаем, откуда пришли
+                previousIds[neighbourId] = currentId;
+
+                // Запоминаем длину ребра
+                previousDistances[neighbourId] = edgeDistance;
+
+                // Добавляем вершину в очередь
+                queue.insert(QueueNode{neighbourId, newDistance});
+            }
+        }
+    }
+
+    // Если путь до конечной КС не найден
+    if (distances[finishId] == INT_MAX) {
+        return false;
+    }
+
+    // Восстанавливаем путь с конца
+    int currentId = finishId;
+
+    while (currentId != startId) {
+        result.push_back(Edge{
+            currentId,
+            previousDistances[currentId]
+        });
+
+        currentId = previousIds[currentId];
+    }
+
+    // Добавляем начальную КС
+    result.push_back(Edge{startId, 0});
+
+    // Переворачиваем путь
+    std::reverse(result.begin(), result.end());
+
+    return true;
 }

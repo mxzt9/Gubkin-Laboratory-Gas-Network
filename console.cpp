@@ -690,6 +690,58 @@ void Console::handleTopologicalSort() {
     readLine("\nНажмите Enter, чтобы вернуться в меню...");
 }
 
+void Console::handleFindShortestPath() {
+    std::vector<Edge> result;
+
+    int startId = readInt("Введите ID стартовой КС: ");
+    int finishId = readInt("Введите ID конечной КС: ");
+
+    if (!network.getCStationMap().contains(startId) || !network.getCStationMap().contains(finishId)) {
+        std::cerr << "[!] Ошибка: одна или обе компрессорные станции не найдены\n";
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    } else if (startId == finishId) {
+        std::cerr << "[!] Ошибка: ID КС совпадают\n";
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    }
+
+
+    if (!network.findShortestPath(startId, finishId, result)) {
+        std::cerr << "[*] Ошибка: не удалось построить кратчайший путь\n";
+        readLine("\nНажмите Enter, чтобы вернуться в меню...");
+        return;
+    }
+
+    int totalDistance = 0;
+
+    std::cout << "[Маршрут]\n";
+
+    for (size_t i = 0; i != result.size(); ++i) {
+        std::cout << result[i].id;
+
+        if (i + 1 < result.size()) {
+            std::cout << " -> ";
+        }
+    }
+
+    std::cout << "\n\n[Участки маршрута]\n";
+
+    
+    for (size_t i = 1; i != result.size(); ++i) {
+        std::cout << std::format("КС {} -> КС {} | Длина: {}\n",
+            result[i - 1].id,
+            result[i].id,
+            result[i].distance
+        );
+
+        totalDistance += result[i].distance;
+    }
+
+    std::cout << "\nОбщая длина пути: " << totalDistance << '\n';
+    readLine("\nНажмите Enter, чтобы вернуться в меню...");
+}
+
 /*
 
 
@@ -792,6 +844,7 @@ void Console::run() {
                 case 9:  clearConsole(); handleLoad(); break;
                 case 10: clearConsole(); handleConnectPipe(); break;
                 case 11: clearConsole(); handleTopologicalSort(); break;
+                case 12: clearConsole(); handleFindShortestPath(); break;
                 case 0:
                     logAction("Выход из программы");
                     running = false;

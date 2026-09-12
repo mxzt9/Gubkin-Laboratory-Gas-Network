@@ -8,6 +8,10 @@ enum class StationType {
     Heavy,
 };
 
+struct Edge {
+    int id {}, distance {};
+};
+
 // Класс КС
 class CompressorStation {
 private:

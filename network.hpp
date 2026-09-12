@@ -49,7 +49,7 @@ public:
     std::vector<int> searchCStationsByName(const std::string& name) const;
     std::vector<int> searchCStationsByActive(const std::vector<char>& condition) const;
 
-    // Топологическая сортировка
+    // Графовые операции
     bool topologicalSort(std::vector<int>& result) const;
-
+    bool findShortestPath(int startId, int finishId, std::vector<Edge>& result) const;
 };

@@ -26,7 +26,8 @@ private:
         "Сохранить",
         "Загрузить",
         "Присоединить трубу",
-        "Топологическая сортировка"
+        "Топологическая сортировка",
+        "Найти кратчайший путь между КС"
     };
 
     // Методы меню просмотра
@@ -61,6 +62,7 @@ private:
     void handleLoad();
     void handleConnectPipe();
     void handleTopologicalSort();
+    void handleFindShortestPath();
 
     // Хэндлеры поиска
     void handleSearchPipesByName() const;
