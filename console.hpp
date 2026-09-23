@@ -1,7 +1,6 @@
 #pragma once
 
 #include "network.hpp"
-#include "log.hpp"
 
 class Console {
 private:
@@ -10,9 +9,6 @@ private:
     };
 
     Network& network;
-    Logger& logger;
-
-    void logAction(const std::string& message) const;
 
     // Пункты главного меню
     const std::vector<std::string> mainMenuItems{
@@ -41,23 +37,23 @@ private:
     // Очистка консоли
     void clearConsole() const;
 
-    // Чтение из термнила
-    std::string readLine(const std::string& prompt, std::string defaultParam = "") const;
-    std::string readValidName(const std::string& prompt, std::string defaultParam = "") const;
-    int readInt(const std::string& prompt, int defaultParam = -1, bool isPositive = false) const;
-    bool readBool(const std::string& prompt, bool defaultParam) const;
-    StationType readStationType(StationType defaultParam) const;
-    std::vector<int> readMultipleChoice(const std::string& prompt) const;
-    std::vector<char> readActiveSearch(const std::string& prompt) const;
+    // Чтение из терминала
+    std::string read_line(const std::string& prompt, std::string defaultParam = "") const;
+    std::string read_valid_name(const std::string& prompt, std::string defaultParam = "") const;
+    int read_int(const std::string& prompt, int defaultParam = -1, bool isPositive = false) const;
+    bool read_bool(const std::string& prompt, bool defaultParam) const;
+    StationType read_station_type(StationType defaultParam) const;
+    std::vector<int> read_multiple_int(const std::string& prompt) const;
+    std::vector<char> read_comparison(const std::string& prompt) const;
 
     // Хэндлеры
     void handleAddPipe();
-    void handleAddCS();
-    void handleViewAll();
+    void handleAddCStation();
+    void handlePrintNetwork();
     void handleEditPipe();
     void handleEditCStation();
     void handleDeletePipe();
-    void handleDeleteCS();
+    void handleDeleteCStation();
     void handleSave();
     void handleLoad();
     void handleConnectPipe();
@@ -74,12 +70,8 @@ private:
     void printMenu() const;
     void printMenuViewAll() const;
 
-    void printPipeTableHeader() const;
-    void printCStationTableHeader() const;
-    void printPipe(int id, const Pipe& pipe) const;
-    void printCS(int id, const CompressorStation& CStation) const;
 
 public:
-    Console(Network& network, Logger& logger) : network(network), logger(logger) {};
+    Console(Network& network) : network(network) {};
     void run();
 };

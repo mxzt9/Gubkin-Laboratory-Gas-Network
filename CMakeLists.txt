@@ -15,15 +15,16 @@ endforeach()
 
 add_executable(${PROJECT_NAME}
         main.cpp
-        units.hpp
+        pipe.hpp
+        pipe.cpp
+        compressStation.hpp
+        compressStation.cpp
         utils.hpp
         utils.cpp
         network.hpp
         network.cpp
         console.hpp
         console.cpp
-        log.hpp
-        log.cpp
 )
 
 if (MSVC)

@@ -9,7 +9,7 @@
 
  
 std::string getTimestamp() {
-    // Читает текущее время и возваращет его в виже строчки
+    // Читает текущее время и возвращает его в виде строки
     const std::time_t now = std::time(nullptr);
     std::tm localTime {};
     localtime_s(&localTime, &now);
@@ -17,7 +17,7 @@ std::string getTimestamp() {
     char buffer[32];
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &localTime);
     return buffer;
-};
+}
 
 std::string getLowerString(const std::string& string) {
     // Принимает строку и возвращает её же в нижнем регистре

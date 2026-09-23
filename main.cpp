@@ -3,7 +3,6 @@
 
 #include "console.hpp"
 #include "network.hpp"
-#include "log.hpp"
 
 
 int main() {
@@ -12,12 +11,10 @@ int main() {
 
     
     std::filesystem::create_directories("data");
-    std::filesystem::create_directories("data/log");
 
     Network network;
-    Logger logger;
 
-    Console console(network, logger);
+    Console console(network);
     console.run();
 
     return 0;
