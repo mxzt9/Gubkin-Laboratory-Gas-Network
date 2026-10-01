@@ -10,21 +10,21 @@ int Pipe::getDiameter() const { return diameter; }
 int Pipe::getLength() const { return length; }
 const std::string& Pipe::getName() const { return name; }
 bool Pipe::getRepair() const { return repair; }
-bool Pipe::isFree() const { return cStationFromId == -1 && cStationToId == -1; }
+bool Pipe::isFree() const { return CStationFromId == -1 && CStationToId == -1; }
 
-int Pipe::getCStationFromId() const { return cStationFromId; }
-int Pipe::getCStationToId() const { return cStationToId; }
+int Pipe::getCStationFromId() const { return CStationFromId; }
+int Pipe::getCStationToId() const { return CStationToId; }
 
 void Pipe::setRepair(bool newRepair) { repair = newRepair; }
 
 void Pipe::connect(int fromId, int toId) {
-    cStationFromId = fromId;
-    cStationToId = toId;
+    CStationFromId = fromId;
+    CStationToId = toId;
 }
 
 void Pipe::disconnect() {
-    cStationFromId = -1;
-    cStationToId = -1;
+    CStationFromId = -1;
+    CStationToId = -1;
 }
 
 void Pipe::printPipeTableHeader() {
@@ -43,8 +43,8 @@ void Pipe::printPipe() const {
         diameter,
         length,
         repair ? "yes" : "no",
-        cStationFromId == -1 ? "None" : std::to_string(cStationFromId),
-        cStationToId == -1 ? "None" : std::to_string(cStationToId)
+        CStationFromId == -1 ? "None" : std::to_string(CStationFromId),
+        CStationToId == -1 ? "None" : std::to_string(CStationToId)
     );
 }
 
@@ -54,8 +54,8 @@ bool Pipe::save(std::ostream& file) const {
          << diameter << '\n' 
          << length << '\n'
          << repair << '\n' 
-         << cStationFromId << '\n'
-         << cStationToId << '\n';
+         << CStationFromId << '\n'
+         << CStationToId << '\n';
         
     return file.good();
 }

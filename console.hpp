@@ -1,4 +1,5 @@
 #pragma once
+#include <limits>
 
 #include "network.hpp"
 
@@ -26,7 +27,7 @@ private:
         "Найти кратчайший путь между КС"
     };
 
-    // Методы меню просмотра
+    // Пункты меню просмотра
     const std::vector<std::string> viewAllMenuItems{
         "Поиск труб по названию",
         "Поиск труб по статусу ремонта",
@@ -40,7 +41,7 @@ private:
     // Чтение из терминала
     std::string read_line(const std::string& prompt, std::string defaultParam = "") const;
     std::string read_valid_name(const std::string& prompt, std::string defaultParam = "") const;
-    int read_int(const std::string& prompt, int defaultParam = -1, bool isPositive = false) const;
+    int read_int(const std::string& prompt, int defaultParam = -1, int min = (std::numeric_limits<int>::min)(), int max = (std::numeric_limits<int>::max)()) const;
     bool read_bool(const std::string& prompt, bool defaultParam) const;
     StationType read_station_type(StationType defaultParam) const;
     std::vector<int> read_multiple_int(const std::string& prompt) const;

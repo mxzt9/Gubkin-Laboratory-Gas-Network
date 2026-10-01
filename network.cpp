@@ -17,7 +17,7 @@ void Network::printNetwork() const {
     }
     
     CompressorStation::printCStationTableHeader();
-    for (const auto& [id, station] : cStationMap) {
+    for (const auto& [id, station] : CStationMap) {
         station.printCStation();
     }
     
@@ -36,7 +36,7 @@ const std::unordered_map<int, Pipe>& Network::getPipeMap() const {
 }
 
 const std::unordered_map<int, CompressorStation>& Network::getCStationMap() const {
-    return cStationMap;
+    return CStationMap;
 }
 
 /*
@@ -51,12 +51,14 @@ bool Network::addPipe(int diameter, int length, const std::string& name, bool re
 
 bool Network::addCStation(int numWorkshops, int numActiveWorkshops, const std::string& name, StationType stationType) {
     const int id = generateCStationId();
-    return cStationMap.try_emplace(id, id, numWorkshops, numActiveWorkshops, name, stationType).second;
+    return CStationMap.try_emplace(id, id, numWorkshops, numActiveWorkshops, name, stationType).second;
 }
 
 bool Network::connectPipe(int pipeId, int fromId, int toId) {
-    if (!pipeMap.contains(pipeId) || !cStationMap.contains(fromId) || !cStationMap.contains(toId) || fromId == toId) return false;
-
+    if (!pipeMap.contains(pipeId) || !CStationMap.contains(fromId) || !CStationMap.contains(toId) || fromId == toId) {
+        return false;
+    }
+    
     Pipe& pipe = pipeMap.at(pipeId);
     if (!pipe.isFree()) {
         return false;
@@ -81,7 +83,7 @@ int Network::findFreePipe(int diameter) const {
 }
 
 bool Network::deleteCStation(int id) {
-    if (!cStationMap.contains(id)) {
+    if (!CStationMap.contains(id)) {
         return false;
     }
 
@@ -91,7 +93,7 @@ bool Network::deleteCStation(int id) {
         }
     }
 
-    cStationMap.erase(id);
+    CStationMap.erase(id);
     return true;
 }
 
@@ -106,12 +108,12 @@ bool Network::editPipe(int id, bool newIsRepair) {
 }
 
 bool Network::editCStation(int id, int newNumActiveWorkshops) {
-    if (!cStationMap.contains(id)) {
+    if (!CStationMap.contains(id)) {
         return false;
     }
 
 
-    CompressorStation& station = cStationMap.at(id);
+    CompressorStation& station = CStationMap.at(id);
 
     return station.setNumActiveWorkshops(newNumActiveWorkshops);
 
@@ -120,14 +122,14 @@ bool Network::editCStation(int id, int newNumActiveWorkshops) {
 bool Network::saveToFile(const std::filesystem::path& filePath) {
     std::ofstream file(filePath);
 
-    if (!file){
+    if (!file) {
         return false;
     }
 
-    file << cStationMap.size() << '\n';
+    file << CStationMap.size() << '\n';
 
-    for (auto& [id, cStation] : cStationMap) {
-        cStation.save(file);
+    for (auto& [id, CStation] : CStationMap) {
+        CStation.save(file);
     }
 
     file << pipeMap.size() << '\n';
@@ -207,7 +209,7 @@ bool Network::loadFromFile(const std::filesystem::path& filePath) {
 
 
     pipeMap = newPipeMap;
-    cStationMap = newCStationMap;
+    CStationMap = newCStationMap;
     nextPipeId = newPipeId;
     nextCStationId = newCStationId;
 
@@ -249,9 +251,9 @@ std::vector<int> Network::searchCStationsByName(const std::string& name) const {
     std::vector<int> result;
     const std::string lowerName = getLowerString(name);
 
-    for (const auto& [cStationId, cStation] : cStationMap) {
-        if (getLowerString(cStation.getName()).starts_with(lowerName)) {
-            result.push_back(cStationId);
+    for (const auto& [CStationId, CStation] : CStationMap) {
+        if (getLowerString(CStation.getName()).starts_with(lowerName)) {
+            result.push_back(CStationId);
         }
     }
 
@@ -275,10 +277,10 @@ std::vector<int> Network::searchCStationsByActive(const std::vector<char>& condi
     // Эквивалент строчки в int
     const int requestedValue = std::stoi(numberString);
 
-    for (const auto& [cStationId, cStation] : cStationMap) {
+    for (const auto& [CStationId, CStation] : CStationMap) {
 
-        const int totalWorkshops = cStation.getNumWorkshops();
-        const int activeWorkshops = cStation.getNumActiveWorkshops();
+        const int totalWorkshops = CStation.getNumWorkshops();
+        const int activeWorkshops = CStation.getNumActiveWorkshops();
 
         long long currentValue;
         long long comparisonValue;
@@ -311,7 +313,7 @@ std::vector<int> Network::searchCStationsByActive(const std::vector<char>& condi
         }
 
         if (matches) {
-            result.push_back(cStationId);
+            result.push_back(CStationId);
         }
     }
 
@@ -354,9 +356,9 @@ bool Network::topologicalSort(std::vector<int>& result) const {
     std::queue<int> queue;
 
     // Добавляем в очередь вершины с отсутствующими входными подключениями
-    for (const auto& [cStationId, degree] : inDegree) {
+    for (const auto& [CStationId, degree] : inDegree) {
         if (degree == 0) {
-            queue.push(cStationId);
+            queue.push(CStationId);
         }
     }
 
@@ -433,8 +435,8 @@ bool Network::findShortestPath(int startId, int finishId, std::vector<Edge>& res
     }
 
     // Заполняем расстояния до всех КС бесконечностью
-    for (const auto& [cStationId, station] : cStationMap) {
-        distances[cStationId] = INT_MAX;
+    for (const auto& [CStationId, station] : CStationMap) {
+        distances[CStationId] = INT_MAX;
     }
 
     // Проверка существования начальной КС

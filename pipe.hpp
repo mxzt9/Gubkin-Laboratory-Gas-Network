@@ -10,8 +10,8 @@ private:
     std::string name {};
     bool repair {};
 
-    int cStationFromId { -1 };
-    int cStationToId { -1 };
+    int CStationFromId { -1 };
+    int CStationToId { -1 };
 
 public:
     Pipe(int id, int diameter, int length, const std::string& name, bool repair);

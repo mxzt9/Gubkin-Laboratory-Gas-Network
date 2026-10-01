@@ -12,10 +12,10 @@
 class Network {
 private:
     std::unordered_map<int, Pipe> pipeMap {};
-    std::unordered_map<int, CompressorStation> cStationMap {};
+    std::unordered_map<int, CompressorStation> CStationMap {};
 
-    int nextPipeId {};
-    int nextCStationId {};
+    int nextPipeId { 0 };
+    int nextCStationId { 0 };
     
     int generatePipeId() { return nextPipeId++; }
     int generateCStationId() { return nextCStationId++; }
@@ -44,7 +44,7 @@ public:
     bool editCStation(int id, int newNumActiveWorkshops);
 
     // Присоединение трубы
-    bool connectPipe(int pipeId, int cStationFromId, int cStationToId);
+    bool connectPipe(int pipeId, int CStationFromId, int CStationToId);
     int findFreePipe(int diameter) const;
 
     // Работа с файлами
