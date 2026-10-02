@@ -11,12 +11,16 @@
 #include "network.hpp"
 #include "utils.hpp"
 
-/*
-Вспомогательные методы
-*/
 
-int Network::getNextPipeId() const { return nextPipeId; }
-int Network::getNextCStationId() const { return nextCStationId; }
+
+
+// Геттеры
+int Network::getNextPipeId() const {
+    return nextPipeId; 
+}
+int Network::getNextCStationId() const {
+    return nextCStationId;
+}
 
 const std::unordered_map<int, Pipe>& Network::getPipeMap() const {
     return pipeMap;
@@ -26,11 +30,9 @@ const std::unordered_map<int, CompressorStation>& Network::getCStationMap() cons
     return CStationMap;
 }
 
-/*
-Методы с действиями на объектами в сети
-*/
 
 
+// Добавление
 std::size_t Network::addPipe(int diameter, int length, const std::string& name, bool repair, int amount) {
     std::size_t added = 0;
 
@@ -64,6 +66,7 @@ std::size_t Network::addCStation(int numWorkshops, int numActiveWorkshops, const
 }
 
 
+// Принтер меню
 void Network::printNetwork() const {
     std::vector<int> pipeIds;
     std::vector<int> CStationIds;
@@ -91,14 +94,11 @@ void Network::printNetwork() const {
         CStationMap.at(id).printCStation();
     }
 
-    Output::printMessage("\n\n");
+    Output::Message("\n\n");
 }
 
-/*
-Поиск и фильтры
-*/
 
-
+// Поиск
 std::vector<int> Network::searchPipesByName(const std::string& name) const {
     std::vector<int> result;
     const std::string lowerName = getLowerString(name);
@@ -198,6 +198,7 @@ std::vector<int> Network::searchCStationsByActive(const std::vector<char>& condi
     return result;
 }
 
+// Редактирование
 std::size_t Network::editPipe(std::vector<int> ids, bool newIsRepair) {
     std::size_t edited = 0;
     
@@ -228,6 +229,7 @@ std::size_t Network::editCStation(std::vector<int> ids, int newNumActiveWorkshop
     return edited;
 }
 
+// Удаление
 std::size_t Network::deletePipe(std::vector<int> ids) {
     std::size_t deleted = 0;
 
@@ -259,6 +261,7 @@ std::size_t Network::deleteCStation(std::vector<int> ids) {
     return deleted;
 }
 
+// Работа с файлами
 bool Network::saveToFile(const std::filesystem::path& filePath) {
     std::ofstream file(filePath);
 
@@ -348,14 +351,15 @@ bool Network::loadFromFile(const std::filesystem::path& filePath) {
     }
 
 
-    pipeMap = newPipeMap;
-    CStationMap = newCStationMap;
+    pipeMap = std::move(newPipeMap);
+    CStationMap = std::move(newCStationMap);
     nextPipeId = newPipeId;
     nextCStationId = newCStationId;
 
     return true;
 }
 
+// Присоединение
 bool Network::connectPipe(int pipeId, int fromId, int toId) {
     if (!pipeMap.contains(pipeId) || !CStationMap.contains(fromId) || !CStationMap.contains(toId) || fromId == toId) {
         return false;
@@ -370,6 +374,7 @@ bool Network::connectPipe(int pipeId, int fromId, int toId) {
     return true;
 }
 
+// Поиск свободной трубы
 int Network::findFreePipe(int diameter) const {
     for (const auto& [pipeId, pipe] : pipeMap) {
         if (pipe.getDiameter() == diameter && pipe.isFree()) {
@@ -380,6 +385,7 @@ int Network::findFreePipe(int diameter) const {
     return -1;
 }
 
+// Графовые операции
 bool Network::topologicalSort(std::vector<int>& result) const {
     // Очистка массива
     result.clear();

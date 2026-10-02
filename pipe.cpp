@@ -29,15 +29,15 @@ void Pipe::disconnect() {
 }
 
 void Pipe::printPipeTableHeader() {
-    Output::printMessage("\n                                     [Трубы]\n");
-    Output::printMessage("──────┬────────────────┬──────────┬──────────┬──────────┬──────────────┬──────────\n");
-    Output::printMessage(std::format("{:<5} │ {:<14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
+    Output::Message("\n                                     [Трубы]\n");
+    Output::Message("──────┬────────────────┬──────────┬──────────┬──────────┬──────────────┬──────────\n");
+    Output::Message(std::format("{:<5} │ {:<14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
         "ID", "Name", "Diameter", "Length", "Repair", "ID CS From", "ID CS To"));
-    Output::printMessage("──────┼────────────────┼──────────┼──────────┼──────────┼──────────────┼──────────\n");
+    Output::Message("──────┼────────────────┼──────────┼──────────┼──────────┼──────────────┼──────────\n");
 }
 
 void Pipe::printPipe() const {
-    Output::printMessage(std::format("{:<5} │ {:<14.14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
+    Output::Message(std::format("{:<5} │ {:<14.14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
         id,
         name,
         diameter,

@@ -22,11 +22,11 @@ bool CompressorStation::setNumActiveWorkshops(int newNumActiveWorkshops) {
 }
 
 void CompressorStation::printCStationTableHeader() {
-    Output::printMessage("\n                 [Компрессорные станции]\n");
-    Output::printMessage("──────┬────────────────┬───────────┬─────────┬────────────────────────────────────\n");
-    Output::printMessage(std::format("{:<5} │ {:<14} │ {:<9} │ {:<7} │ {:<8}\n",
+    Output::Message("\n                 [Компрессорные станции]\n");
+    Output::Message("──────┬────────────────┬───────────┬─────────┬────────────────────────────────────\n");
+    Output::Message(std::format("{:<5} │ {:<14} │ {:<9} │ {:<7} │ {:<8}\n",
                                      "ID", "Name", "Workshops", "Active", "Type"));
-    Output::printMessage("──────┼────────────────┼───────────┼─────────┼────────────────────────────────────\n");
+    Output::Message("──────┼────────────────┼───────────┼─────────┼────────────────────────────────────\n");
 }
 
 void CompressorStation::printCStation() const {
@@ -36,7 +36,7 @@ void CompressorStation::printCStation() const {
     else if (getStationType() == StationType::Medium) { type = "Medium"; }
     else { type = "Heavy"; }
 
-    Output::printMessage(std::format("{:<5} │ {:<14.14} │ {:<9} │ {:<7} │ {:<8}\n",
+    Output::Message(std::format("{:<5} │ {:<14.14} │ {:<9} │ {:<7} │ {:<8}\n",
         id,
         name,
         numWorkshops,

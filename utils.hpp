@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <limits>
 
 namespace Format {
     inline constexpr const char* RESET   = "\x1b[0m";
@@ -24,16 +25,28 @@ namespace Format {
 }
 
 
-
 namespace Output {
     void clearConsole();
+    
+    void Message(const std::string& message, const char* prefix = "", const char* color = "", std::ostream& output = std::cout);
+    
+    void Error(const std::string& message);
+    void Warning(const std::string& message);
+    void Success(const std::string& message);
+    void Info(const std::string& message);
+}
 
-    void printMessage(const std::string& message, const char* prefix = "", const char* color = "", std::ostream& output = std::cout);
+namespace Input {
+    enum class Command {
+        Exit
+    };
 
-    void printError(const std::string& message);
-    void printWarning(const std::string& message);
-    void printSuccess(const std::string& message);
-    void printInfo(const std::string& message);
+    std::string String(const std::string& prompt, std::string defaultParam = "");
+    int Int(const std::string& prompt, int defaultParam = -1, int min = (std::numeric_limits<int>::min)(), int max = (std::numeric_limits<int>::max)());
+    std::vector<int> MultipleInt(const std::string& prompt);
+    bool Bool(const std::string& prompt, bool defaultParam);
+
+    std::vector<char> Comparison(const std::string& prompt);
 }
 
 struct Edge {
@@ -43,5 +56,3 @@ struct Edge {
 std::string getTimestamp();
 
 std::string getLowerString(const std::string& string);
-
-bool isValidName(const std::string& value);
