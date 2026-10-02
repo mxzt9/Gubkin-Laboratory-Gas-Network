@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "compressStation.hpp"
+#include "utils.hpp"
 
 CompressorStation::CompressorStation(int id, int numWorkshops, int numActiveWorkshops, const std::string& name, StationType stationType) : id(id), numWorkshops(numWorkshops), numActiveWorkshops(numActiveWorkshops), name(name), stationType(stationType) {}
 
@@ -21,12 +22,11 @@ bool CompressorStation::setNumActiveWorkshops(int newNumActiveWorkshops) {
 }
 
 void CompressorStation::printCStationTableHeader() {
-    std::cout << "\n                            [Компрессорные станции]                               ";
-    std::cout << "\n───────┬────────────┬───────────┬──────────┬─────────────────────────────────────\n";
-    std::cout << std::format("{:<6} │ {:<10.10} │ {:<9} │ {:<8} │ {}\n",
-        "ID", "Name", "Workshops", "Active", "Type");
-    std::cout << "───────┼────────────┼───────────┼──────────┼─────────────────────────────────────\n";
-    
+    Output::printMessage("\n                 [Компрессорные станции]\n");
+    Output::printMessage("──────┬────────────────┬───────────┬─────────┬────────────────────────────────────\n");
+    Output::printMessage(std::format("{:<5} │ {:<14} │ {:<9} │ {:<7} │ {:<8}\n",
+                                     "ID", "Name", "Workshops", "Active", "Type"));
+    Output::printMessage("──────┼────────────────┼───────────┼─────────┼────────────────────────────────────\n");
 }
 
 void CompressorStation::printCStation() const {
@@ -36,13 +36,13 @@ void CompressorStation::printCStation() const {
     else if (getStationType() == StationType::Medium) { type = "Medium"; }
     else { type = "Heavy"; }
 
-    std::cout << std::format("{:<6} │ {:<10.10} │ {:<9} │ {:<8} │ {}\n",
+    Output::printMessage(std::format("{:<5} │ {:<14.14} │ {:<9} │ {:<7} │ {:<8}\n",
         id,
         name,
         numWorkshops,
         numActiveWorkshops,
         type
-    );
+    ));
 }
 
 bool CompressorStation::save(std::ostream& file) const {

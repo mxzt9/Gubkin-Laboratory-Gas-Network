@@ -1,5 +1,6 @@
 #pragma once
 #include <limits>
+#include <iosfwd>
 
 #include "network.hpp"
 
@@ -35,16 +36,18 @@ private:
         "Поиск КС по проценту/числу активных цехов"
     };
 
-    // Очистка консоли
-    void clearConsole() const;
+    // Сообщения и ожидание продолжения
+    void waitForEnter() const;
 
     // Чтение из терминала
     std::string read_line(const std::string& prompt, std::string defaultParam = "") const;
-    std::string read_valid_name(const std::string& prompt, std::string defaultParam = "") const;
+    std::string read_name(const std::string& prompt, std::string defaultParam = "") const;
+
     int read_int(const std::string& prompt, int defaultParam = -1, int min = (std::numeric_limits<int>::min)(), int max = (std::numeric_limits<int>::max)()) const;
+    std::vector<int> read_multiple_int(const std::string& prompt) const;
+
     bool read_bool(const std::string& prompt, bool defaultParam) const;
     StationType read_station_type(StationType defaultParam) const;
-    std::vector<int> read_multiple_int(const std::string& prompt) const;
     std::vector<char> read_comparison(const std::string& prompt) const;
 
     // Хэндлеры

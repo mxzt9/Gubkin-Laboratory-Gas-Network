@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "pipe.hpp"
+#include "utils.hpp"
 
 Pipe::Pipe(int id, int diameter, int length, const std::string& name, bool repair) : id(id), diameter(diameter), length(length), name(name), repair(repair) {}
 
@@ -28,16 +29,15 @@ void Pipe::disconnect() {
 }
 
 void Pipe::printPipeTableHeader() {
-    std::cout << "\n                                    [Трубы]                                       ";
-    std::cout << "\n───────┬────────────┬──────────┬──────────┬──────────┬──────────────┬───────────\n";
-    std::cout << std::format("{:<6} │ {:<10.10} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {}\n",
-        "ID", "Name", "Diameter", "Length", "Repair", "ID CS From", "ID CS To");
-    std::cout <<   "───────┼────────────┼──────────┼──────────┼──────────┼──────────────┼───────────\n";
-    
+    Output::printMessage("\n                                     [Трубы]\n");
+    Output::printMessage("──────┬────────────────┬──────────┬──────────┬──────────┬──────────────┬──────────\n");
+    Output::printMessage(std::format("{:<5} │ {:<14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
+        "ID", "Name", "Diameter", "Length", "Repair", "ID CS From", "ID CS To"));
+    Output::printMessage("──────┼────────────────┼──────────┼──────────┼──────────┼──────────────┼──────────\n");
 }
 
 void Pipe::printPipe() const {
-    std::cout << std::format("{:<6} │ {:<10.10} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {}\n",
+    Output::printMessage(std::format("{:<5} │ {:<14.14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
         id,
         name,
         diameter,
@@ -45,7 +45,7 @@ void Pipe::printPipe() const {
         repair ? "yes" : "no",
         CStationFromId == -1 ? "None" : std::to_string(CStationFromId),
         CStationToId == -1 ? "None" : std::to_string(CStationToId)
-    );
+    ));
 }
 
 bool Pipe::save(std::ostream& file) const {
