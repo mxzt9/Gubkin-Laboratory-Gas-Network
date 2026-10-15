@@ -1,9 +1,8 @@
+#include <sstream>
+#include <cstdlib>
 #include <string>
-#include <vector>
 #include <iostream>
 #include <format>
-#include <set>
-#include <sstream>
 #include <chrono>
 
 #include "utils.hpp"
@@ -16,10 +15,14 @@ namespace Output {
 
     void Message(const std::string& message, const std::string prefix, std::ostream& output) {
         output << prefix << message;
+
+        if (&output != &std::cerr) {
+            std::cerr << prefix << message;
+        }
     }
 
     void Error(const std::string& message) {
-        Message(message, "[*] Ошибка: ", std::cerr);
+        Message(message, "[*] Ошибка: ");
     }
 
     void Warning(const std::string& message) {
@@ -37,7 +40,7 @@ namespace Output {
 
 
 namespace Input {
-    std::string String(const std::string& prompt, const std::string& default_value) {
+    std::string String(const std::string& prompt, const std::string& default_value, std::istream& input) {
         std::string full_prompt {};
 
         if (default_value.empty()) {
@@ -46,59 +49,39 @@ namespace Input {
             full_prompt = std::format("{} [значение по умолчанию: {}]: ", prompt, default_value);
         }
 
-        while (true) {
-            Output::Message(full_prompt);
+        Output::Message(full_prompt);
 
-            std::string value;
-            std::getline(std::cin, value);
-
-            if (value.empty()) {
-                return default_value;
-            }
-
-            if (value == "exit" || value == "Exit" || value == "EXIT") {
-                throw Command::Exit;
-            }
-
-            return value;
+        std::string value;
+        if (!std::getline(input, value)) {
+            throw Command::Exit;
         }
+
+        if (value.empty()) {
+            std::cerr << default_value << '\n';
+            return default_value;
+        }
+
+        std::cerr << value << '\n';
+
+        if (value == "exit" || value == "Exit" || value == "EXIT") {
+            throw Command::Exit;
+        }
+
+        return value;
     }
 
-    int Int(const std::string& prompt, int default_value, int min, int max, bool show_default) {
-        std::string full_prompt {};
-
-        if (show_default) {
-            full_prompt = std::format("{} [значение по умолчанию: {}] (от {} до {}): ", prompt, default_value, min, max);
-        } else {
-            full_prompt = std::format("{}: ", prompt);
-        }
+    static int readInt(const std::string& prompt, int min, int max, const std::string& default_value, std::istream& input) {
+        const std::string full_prompt = std::format("{} (от {} до {})", prompt, min, max);
 
         while (true) {
-            Output::Message(full_prompt);
-
+            const std::string text = String(full_prompt, default_value, input);
+            std::istringstream stream(text);
             int value;
 
-            if (std::cin.peek() == '\n') {
-                value = default_value;
-            } else {
-                std::cin >> value;
-            }
-
-            if (std::cin.fail()) {
-                std::cin.clear();
-
-                std::string input;
-                std::getline(std::cin, input);
-
-                if (input == "exit" || input == "Exit" || input == "EXIT") {
-                    throw Command::Exit;
-                }
-
+            if (!(stream >> value) || !(stream >> std::ws).eof()) {
                 Output::Error("Введите корректное число.\n");
                 continue;
             }
-
-            std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 
             if (value < min || value > max) {
                 Output::Error("Введите число в допустимом диапазоне.\n");
@@ -109,34 +92,30 @@ namespace Input {
         }
     }
 
-    template<typename T>
-    std::vector<T> Vector(const std::string& prompt) {
-        while (true) {
-            const std::string value = String(prompt);
-
-            std::stringstream stringStream(value);
-
-            std::set<T> ids;
-            T id;
-
-            // Чтение ID через пробел
-            while (stringStream >> id) {
-                ids.insert(id);
-            }
-
-            if (!ids.empty() && stringStream.eof()) {
-                return std::vector<T>(ids.begin(), ids.end());
-            }
-
-            Output::Error("Введите числа через пробел.\n");
-        }
+    int Int(const std::string& prompt, int min, int max, std::istream& input) {
+        return readInt(prompt, min, max, "", input);
     }
 
-    bool Bool(const std::string& prompt, bool default_value) {
+    int Int(const std::string& prompt, int min, int max, int default_value, std::istream& input) {
+        return readInt(prompt, min, max, std::to_string(default_value), input);
+    }
+
+    void Pause(std::istream& input) {
+        Output::Message("Нажмите Enter для продолжения: ");
+
+        std::string value;
+        if (!std::getline(input, value)) {
+            throw Command::Exit;
+        }
+
+        std::cerr << value << '\n';
+    }
+
+    bool Bool(const std::string& prompt, bool default_value, std::istream& input) {
         std::string full_prompt = prompt + " (y/n)";
 
         while (true) {
-            const std::string value = String(full_prompt, default_value ? "y" : "n");
+            const std::string value = String(full_prompt, default_value ? "y" : "n", input);
 
             if (value == "y" || value == "Y") { return true; }
             if (value == "n" || value == "N") { return false; }
@@ -145,9 +124,9 @@ namespace Input {
         }
     }
 
-    template std::vector<std::size_t> Vector<std::size_t>(const std::string& prompt);
 }
 
 std::string getTimestamp() {
     std::string time = std::format("{:%d_%m_%Y %H_%M_%OS}", std::chrono::system_clock::now());
+    return time;
 }

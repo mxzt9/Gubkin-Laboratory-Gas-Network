@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -7,33 +8,18 @@
 
 
 // Добавление
-bool Network::createPipe(int diameter, int length, const std::string& name, bool repair, int amount) {
-    for (int i = 0; i != amount; ++i) {
-        Pipe pipe {diameter, length, name, repair};
-
-        if (!PipeMap.emplace(pipe.get_id(), pipe).second) {
-            return false;
-        }
-    }
-
-    return true;
+bool Network::createPipe(const Pipe& pipe) {
+    return PipeMap.emplace(pipe.get_id(), pipe).second;
 }
 
-bool Network::createCStation(int unit_amount, int active_unit_amount, const std::string& name, int station_type, int amount) {
-    for (int i = 0; i != amount; ++i) {
-        CStation station {unit_amount, active_unit_amount, name, station_type};
-
-        if (!CStationMap.emplace(station.get_id(), station).second) {
-            return false;
-        }
-    }
-
-    return true;
+bool Network::createCStation(const CStation& station) {
+    return CStationMap.emplace(station.get_id(), station).second;
 }
+
 
 void Network::print() {
-    std::vector<std::size_t> pipeIds;
-    std::vector<std::size_t> CStationIds;
+    std::vector<int> pipeIds;
+    std::vector<int> CStationIds;
 
     for (const auto& [id, pipe] : PipeMap) {
         pipeIds.push_back(id);
@@ -48,49 +34,49 @@ void Network::print() {
 
     Pipe::print_table_header();
 
-    for (const std::size_t id : pipeIds) {
-        PipeMap.at(id).print();
+    for (const int id : pipeIds) {
+        std::cout << PipeMap.at(id);
     }
 
     CStation::print_table_header();
 
-    for (const std::size_t id : CStationIds) {
-        CStationMap.at(id).print();
+    for (const int id : CStationIds) {
+        std::cout << CStationMap.at(id);
     }
 
     Output::Message("\n\n");
 }
 
-std::vector<Pipe> Network::searchPipesByName(const std::string& name) const {
-    std::vector<Pipe> result;
+std::vector<int> Network::searchPipesByName(const std::string& name) const {
+    std::vector<int> result;
 
     for (const auto& [id, pipe] : PipeMap) {
-        if (pipe.get_name() == name) {
-            result.push_back(pipe);
+        if (pipe.get_name().find(name) != std::string::npos) {
+            result.push_back(id);
         }
     }
 
     return result;
 }
 
-std::vector<CStation> Network::searchCStationsByName(const std::string& name) const {
-    std::vector<CStation> result;
+std::vector<int> Network::searchCStationsByName(const std::string& name) const {
+    std::vector<int> result;
 
     for (const auto& [id, station] : CStationMap) {
-        if (station.get_name() == name) {
-            result.push_back(station);
+        if (station.get_name().find(name) != std::string::npos) {
+            result.push_back(id);
         }
     }
 
     return result;
 }
 
-std::vector<Pipe> Network::searchPipesByRepair(bool repair) const {
-    std::vector<Pipe> result;
+std::vector<int> Network::searchPipesByRepair(bool repair) const {
+    std::vector<int> result;
 
     for (const auto& [id, pipe] : PipeMap) {
         if (pipe.get_repair() == repair) {
-            result.push_back(pipe);
+            result.push_back(id);
         }
     }
 
@@ -98,20 +84,24 @@ std::vector<Pipe> Network::searchPipesByRepair(bool repair) const {
 }
 
 
-std::vector<CStation> Network::searchCStationsByActive(std::string comparison, int ratio) const {
-    if (!(comparison == "<" || comparison == "=" || comparison == ">")) {
+std::vector<int> Network::searchCStationsByActive(const std::string& comparison, int ratio) const {
+    if (!(comparison == "<" || comparison == "<=" || comparison == "=" || comparison == ">=" || comparison == ">")) {
         return {};
     }
     
-    std::vector<CStation> result;
+    std::vector<int> result {};
 
     for (const auto& [id, station] : CStationMap) {
         if (comparison == "<" && station.get_unit_ratio() < ratio) {
-            result.push_back(station);
-        }  else if (comparison == "=" && station.get_unit_ratio() == ratio) {
-            result.push_back(station);
+            result.push_back(id);
+        } else if (comparison == "<=" && station.get_unit_ratio() <= ratio) {
+            result.push_back(id);
+        } else if (comparison == "=" && station.get_unit_ratio() == ratio) {
+            result.push_back(id);
         } else if (comparison == ">" && station.get_unit_ratio() > ratio) {
-            result.push_back(station);
+            result.push_back(id);
+        } else if (comparison == ">=" && station.get_unit_ratio() >= ratio) {
+            result.push_back(id);
         }
     }
 
@@ -119,21 +109,26 @@ std::vector<CStation> Network::searchCStationsByActive(std::string comparison, i
 }
 
 
-bool Network::editPipe(const std::vector<std::size_t>& ids, bool new_repair) {
+bool Network::editPipe(const std::vector<int>& ids, bool new_repair) {
+    if (ids.empty()) {
+        return false;
+    }
+
     for (const auto id : ids) {
-        if (auto it = PipeMap.find(id); it != PipeMap.end()) {
-            // При ошибке редактирования выходим
-            if (!it->second.edit(new_repair)) {
-                return false;
-            };
+        if (PipeMap.find(id) == PipeMap.end()) {
+            return false;
         }
+    }
+
+    for (const auto id : ids) {
+        PipeMap.at(id).edit(new_repair);
     }
 
     return true;
 }
 
-bool Network::editCStation(const std::vector<std::size_t>& ids, int new_active_unit_amount) {
-    if (new_active_unit_amount < 0) {
+bool Network::editCStation(const std::vector<int>& ids, int new_active_unit_amount) {
+    if (ids.empty() || new_active_unit_amount < 0) {
         return false;
     }
 
@@ -152,7 +147,17 @@ bool Network::editCStation(const std::vector<std::size_t>& ids, int new_active_u
     return true;
 }
 
-bool Network::deletePipe(const std::vector<std::size_t>& ids) {
+bool Network::deletePipe(const std::vector<int>& ids) {
+    if (ids.empty()) {
+        return false;
+    }
+
+    for (const auto id : ids) {
+        if (PipeMap.find(id) == PipeMap.end()) {
+            return false;
+        }
+    }
+
     for (const auto id : ids) {
         PipeMap.erase(id);
     }
@@ -160,7 +165,17 @@ bool Network::deletePipe(const std::vector<std::size_t>& ids) {
     return true;
 }
 
-bool Network::deleteCStation(const std::vector<std::size_t>& ids) {
+bool Network::deleteCStation(const std::vector<int>& ids) {
+    if (ids.empty()) {
+        return false;
+    }
+
+    for (const auto id : ids) {
+        if (CStationMap.find(id) == CStationMap.end()) {
+            return false;
+        }
+    }
+
     for (const auto id : ids) {
         CStationMap.erase(id);
     }
@@ -176,7 +191,7 @@ bool Network::save(const std::filesystem::path& path) const {
     }
 
     
-    std::vector<std::size_t> ids;
+    std::vector<int> ids;
 
     file << CStationMap.size() << '\n';
 
@@ -220,8 +235,8 @@ bool Network::load(const std::filesystem::path& path) {
         return false;
     }
 
-    std::unordered_map<std::size_t, CStation> stations;
-    std::unordered_map<std::size_t, Pipe> pipes;
+    std::unordered_map<int, CStation> stations;
+    std::unordered_map<int, Pipe> pipes;
     int count {};
 
     if (!(file >> count) || count < 0) {

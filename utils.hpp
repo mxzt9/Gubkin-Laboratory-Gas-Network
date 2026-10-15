@@ -2,14 +2,9 @@
 
 #include <iostream>
 #include <string>
-#include <fstream>
 #include <vector>
 #include <set>
 #include <sstream>
-#include <charconv>
-#include <system_error>
-#include <climits>
-#include <limits>
 
 namespace Output {
     void clearConsole();
@@ -28,14 +23,37 @@ namespace Input {
         Exit
     };
 
-    std::string String(const std::string& prompt, const std::string& default_value = "");
+    std::string String(const std::string& prompt, const std::string& default_value = "", std::istream& input = std::cin);
 
-    int Int(const std::string& prompt, int default_value, int min = (std::numeric_limits<int>::min)(), int max = (std::numeric_limits<int>::max)(), bool show_info = true);
+    int Int(const std::string& prompt, int min, int max, std::istream& input = std::cin);
+    int Int(const std::string& prompt, int min, int max, int default_value, std::istream& input = std::cin);
+
+    void Pause(std::istream& input = std::cin);
 
     template<typename T>
-    std::vector<T> Vector(const std::string& prompt);
+    std::vector<T> Vector(const std::string& prompt) {
+        while (true) {
+            const std::string value = String(prompt);
+
+            std::stringstream stringStream(value);
+
+            std::set<T> ids;
+            T id {};
+
+            // Чтение ID через пробел
+            while (stringStream >> id) {
+                ids.insert(id);
+            }
+
+            if (!ids.empty() && stringStream.eof()) {
+                return std::vector<T>(ids.begin(), ids.end());
+            }
+
+            Output::Error("Введите числа через пробел.\n");
+        }
+    }
     
-    bool Bool(const std::string& prompt, bool default_value);
+    bool Bool(const std::string& prompt, bool default_value, std::istream& input = std::cin);
     
 }
 

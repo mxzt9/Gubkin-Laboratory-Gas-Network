@@ -1,13 +1,13 @@
+#include <climits>
 #include <iostream>
 #include <string>
 #include <format>
-#include <algorithm>
 #include <limits>
 
 #include "pipe.hpp"
 #include "utils.hpp"
 
-std::size_t Pipe::next_id = 0;
+int Pipe::next_id = 0;
 
 Pipe::Pipe(int diameter, int length, const std::string& name, bool repair) : id(next_id++), diameter(diameter), 
 length(length), name(name), repair(repair) {}
@@ -20,22 +20,8 @@ void Pipe::print_table_header() {
     Output::Message("──────┼────────────────┼──────────┼──────────┼──────────┼──────────────┼──────────\n");
 }
 
-
-void Pipe::print() const {
-    Output::Message(std::format("{:<5} │ {:<14.14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
-        id,
-        name,
-        diameter,
-        length,
-        repair ? "yes" : "no",
-        "-",
-        "-"
-    ));
-}
-
-bool Pipe::edit(bool new_repair) {
+void Pipe::edit(bool new_repair) {
     repair = new_repair;
-    return true;
 }
 
 bool Pipe::save(std::ostream& file) const {
@@ -59,11 +45,36 @@ bool Pipe::load(std::istream& file) {
         return false;
     }
 
-    if (diameter <= 0 || length <= 0 || id == (std::numeric_limits<std::size_t>::max)()) {
+    if (diameter <= 0 || length <= 0 || id < 0 || id == (std::numeric_limits<int>::max)()) {
         return false;
     }
 
-    next_id = std::max(next_id, id + 1);
+    next_id = next_id > id + 1 ? next_id : id + 1;
 
     return true;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Pipe& pipe) {
+    stream << std::format("{:<5} │ {:<14.14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
+        pipe.id,
+        pipe.name,
+        pipe.diameter,
+        pipe.length,
+        pipe.repair ? "yes" : "no",
+        "-",
+        "-"
+    );
+
+    return stream;
+}
+
+std::istream& operator>>(std::istream& stream, Pipe& pipe) {
+    int diameter = Input::Int("Диаметр (мм)", 1, std::numeric_limits<int>::max(), 500, stream);
+    int length = Input::Int("Длина (км)", 1, std::numeric_limits<int>::max(), 100, stream);
+    std::string name = Input::String("Название", "Pipe", stream);
+    bool repair = Input::Bool("В ремонте?", false, stream);
+
+    pipe = Pipe(diameter, length, name, repair);
+
+    return stream;
 }

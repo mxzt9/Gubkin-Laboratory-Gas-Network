@@ -1,8 +1,8 @@
 #pragma once
 
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <cstddef>
 #include <filesystem>
 
 #include "pipe.hpp"
@@ -11,35 +11,39 @@
 
 class Network {
 private:
-    std::unordered_map<std::size_t, Pipe> PipeMap {};
-    std::unordered_map<std::size_t, CStation> CStationMap {};
+    std::unordered_map<int, Pipe> PipeMap {};
+    std::unordered_map<int, CStation> CStationMap {};
 
 public:
+    // Геттеры
+    const Pipe& get_pipe_by_id(int id) const { return PipeMap.at(id); }
+    const CStation& get_station_by_id(int id) const { return CStationMap.at(id); }
+
     // Чекеры
-    bool emptyPipes() { return PipeMap.empty(); }
-    bool emptyCStations() { return CStationMap.empty(); }
+    bool emptyPipes() const { return PipeMap.empty(); }
+    bool emptyCStations() const { return CStationMap.empty(); }
 
     // Добавление
-    bool createPipe(int diameter, int length, const std::string& name, bool repair, int amount = 1);
-    bool createCStation(int unit_amount, int active_unit_amount, const std::string& name, int station_type, int amount = 1);
+    bool createPipe(const Pipe& pipe);
+    bool createCStation(const CStation& station);
 
     // Принтер меню
     void print();
 
     // Поиск по фильтрам
-    std::vector<Pipe> searchPipesByName(const std::string& name) const;
-    std::vector<CStation> searchCStationsByName(const std::string& name) const;
+    std::vector<int> searchPipesByName(const std::string& name) const;
+    std::vector<int> searchCStationsByName(const std::string& name) const;
 
-    std::vector<Pipe> searchPipesByRepair(bool repair) const;
-    std::vector<CStation> searchCStationsByActive(std::string comparison, int ratio) const;
+    std::vector<int> searchPipesByRepair(bool repair) const;
+    std::vector<int> searchCStationsByActive(const std::string& comparison, int ratio) const;
 
     // Редактирование
-    bool editPipe(const std::vector<std::size_t>& ids, bool new_repair);
-    bool editCStation(const std::vector<std::size_t>& ids, int new_active_unit_amount);
+    bool editPipe(const std::vector<int>& ids, bool new_repair);
+    bool editCStation(const std::vector<int>& ids, int new_active_unit_amount);
 
     // Удаление
-    bool deletePipe(const std::vector<std::size_t>& ids);
-    bool deleteCStation(const std::vector<std::size_t>& ids);
+    bool deletePipe(const std::vector<int>& ids);
+    bool deleteCStation(const std::vector<int>& ids);
 
     // Работа с файлам
     bool save(const std::filesystem::path& path) const;
