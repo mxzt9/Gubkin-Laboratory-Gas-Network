@@ -7,10 +7,9 @@
 #include "cstation.hpp"
 #include "utils.hpp"
 
-int CStation::next_id = 0;
+int CStation::next_id = 1;
 
-CStation::CStation(int unit_amount, int active_unit_amount, const std::string& name, int station_type) : id(next_id++), unit_amount(unit_amount), 
-active_unit_amount(active_unit_amount), name(name), station_type(station_type) {}
+CStation::CStation(int unit_amount, int active_unit_amount, const std::string& name, int station_type) : id(next_id++), unit_amount(unit_amount), active_unit_amount(active_unit_amount), name(name), station_type(station_type) {}
 
 void CStation::print_table_header() {
     Output::Message("\n                 [Компрессорные станции]\n");
@@ -71,10 +70,10 @@ std::ostream& operator<<(std::ostream& stream, const CStation& station) {
     return stream; 
 }
 std::istream& operator>>(std::istream& stream, CStation& station) {
-    int unit_amount = Input::Int("Количество цехов (ед)", 1, std::numeric_limits<int>::max(), 10, stream);
-    int active_unit_amount = Input::Int("Количество цехов в работе (ед)", 0, unit_amount, unit_amount, stream);
-    std::string name = Input::String("Название", "CStation", stream);
-    int station_type = Input::Int("Класс станции", 0, 2, 0, stream);
+    int unit_amount = Input::Int("Количество цехов (ед)", 1, CStation::max_unit_amount, 10);
+    int active_unit_amount = Input::Int("Количество цехов в работе (ед)", 0, unit_amount, unit_amount);
+    std::string name = Input::String("Название", "CStation");
+    int station_type = Input::Int("Класс станции", 0, 2, 0);
 
     station = CStation(unit_amount, active_unit_amount, name, station_type);
 

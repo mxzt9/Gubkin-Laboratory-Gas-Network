@@ -1,6 +1,7 @@
 #include <string>
 #include <cstddef>
 #include <climits>
+#include <limits>
 #include <iostream>
 #include <format>
 
@@ -56,10 +57,10 @@ void Console::handlePrintNetwork() {
             return;
         default: {
             Output::Error("Нет такого пункта меню.\n");
-            Input::Pause();
             break;
         }
     }
+    Input::Pause();
 };
 
 void Console::handleCreatePipe() {
@@ -287,7 +288,7 @@ void Console::run() {
 
                 case 3:
                     handlePrintNetwork();
-                    break;
+                    continue;
 
                 case 4:
                     handleEditPipe();

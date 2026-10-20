@@ -51,7 +51,7 @@ std::vector<int> Network::searchPipesByName(const std::string& name) const {
     std::vector<int> result;
 
     for (const auto& [id, pipe] : PipeMap) {
-        if (pipe.get_name().find(name) != std::string::npos) {
+        if (Filter::Name(pipe, name)) {
             result.push_back(id);
         }
     }
@@ -63,7 +63,7 @@ std::vector<int> Network::searchCStationsByName(const std::string& name) const {
     std::vector<int> result;
 
     for (const auto& [id, station] : CStationMap) {
-        if (station.get_name().find(name) != std::string::npos) {
+        if (Filter::Name(station, name)) {
             result.push_back(id);
         }
     }
@@ -75,7 +75,7 @@ std::vector<int> Network::searchPipesByRepair(bool repair) const {
     std::vector<int> result;
 
     for (const auto& [id, pipe] : PipeMap) {
-        if (pipe.get_repair() == repair) {
+        if (Filter::Repair(pipe, repair)) {
             result.push_back(id);
         }
     }
@@ -92,15 +92,7 @@ std::vector<int> Network::searchCStationsByActive(const std::string& comparison,
     std::vector<int> result {};
 
     for (const auto& [id, station] : CStationMap) {
-        if (comparison == "<" && station.get_unit_ratio() < ratio) {
-            result.push_back(id);
-        } else if (comparison == "<=" && station.get_unit_ratio() <= ratio) {
-            result.push_back(id);
-        } else if (comparison == "=" && station.get_unit_ratio() == ratio) {
-            result.push_back(id);
-        } else if (comparison == ">" && station.get_unit_ratio() > ratio) {
-            result.push_back(id);
-        } else if (comparison == ">=" && station.get_unit_ratio() >= ratio) {
+        if (Filter::Active(station, comparison, ratio)) {
             result.push_back(id);
         }
     }
@@ -115,13 +107,13 @@ bool Network::editPipe(const std::vector<int>& ids, bool new_repair) {
     }
 
     for (const auto id : ids) {
-        if (PipeMap.find(id) == PipeMap.end()) {
+        if (!PipeMap.contains(id)) {
             return false;
         }
     }
 
     for (const auto id : ids) {
-        PipeMap.at(id).edit(new_repair);
+        PipeMap[id].edit(new_repair);
     }
 
     return true;
@@ -134,14 +126,17 @@ bool Network::editCStation(const std::vector<int>& ids, int new_active_unit_amou
 
     // Проверяем есть ли все трубы и у всех кол-во цехов больше чем новых активных
     for (const auto id : ids) {
-        auto it = CStationMap.find(id);
-        if (it == CStationMap.end() || it->second.get_unit_amount() < new_active_unit_amount) {
+        if (!CStationMap.contains(id)) {
+            return false;
+        }
+
+        if (CStationMap[id].get_unit_amount() < new_active_unit_amount) {
             return false;
         }
     }
 
     for (const auto id : ids) {
-        CStationMap.at(id).edit(new_active_unit_amount);
+        CStationMap[id].edit(new_active_unit_amount);
     }
 
     return true;
@@ -153,7 +148,7 @@ bool Network::deletePipe(const std::vector<int>& ids) {
     }
 
     for (const auto id : ids) {
-        if (PipeMap.find(id) == PipeMap.end()) {
+        if (!PipeMap.contains(id)) {
             return false;
         }
     }
@@ -171,7 +166,7 @@ bool Network::deleteCStation(const std::vector<int>& ids) {
     }
 
     for (const auto id : ids) {
-        if (CStationMap.find(id) == CStationMap.end()) {
+        if (!CStationMap.contains(id)) {
             return false;
         }
     }
@@ -190,7 +185,6 @@ bool Network::save(const std::filesystem::path& path) const {
         return false;
     }
 
-    
     std::vector<int> ids;
 
     file << CStationMap.size() << '\n';
@@ -235,8 +229,12 @@ bool Network::load(const std::filesystem::path& path) {
         return false;
     }
 
-    std::unordered_map<int, CStation> stations;
-    std::unordered_map<int, Pipe> pipes;
+    PipeMap.clear();
+    CStationMap.clear();
+
+    Pipe::reset_next_id();
+    CStation::reset_next_id();
+
     int count {};
 
     if (!(file >> count) || count < 0) {
@@ -252,7 +250,7 @@ bool Network::load(const std::filesystem::path& path) {
 
         const auto id = station.get_id();
 
-        if (!stations.emplace(id, station).second) {
+        if (!CStationMap.emplace(id, station).second) {
             return false;
         }
     }
@@ -270,7 +268,7 @@ bool Network::load(const std::filesystem::path& path) {
 
         const auto id = pipe.get_id();
 
-        if (!pipes.emplace(id, pipe).second) {
+        if (!PipeMap.emplace(id, pipe).second) {
             return false;
         }
     }
@@ -280,9 +278,6 @@ bool Network::load(const std::filesystem::path& path) {
     if (!file.eof() || file.bad()) {
         return false;
     }
-
-    CStationMap.swap(stations);
-    PipeMap.swap(pipes);
 
     return true;
 }

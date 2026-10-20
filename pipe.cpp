@@ -7,7 +7,7 @@
 #include "pipe.hpp"
 #include "utils.hpp"
 
-int Pipe::next_id = 0;
+int Pipe::next_id = 1;
 
 Pipe::Pipe(int diameter, int length, const std::string& name, bool repair) : id(next_id++), diameter(diameter), 
 length(length), name(name), repair(repair) {}
@@ -69,10 +69,10 @@ std::ostream& operator<<(std::ostream& stream, const Pipe& pipe) {
 }
 
 std::istream& operator>>(std::istream& stream, Pipe& pipe) {
-    int diameter = Input::Int("Диаметр (мм)", 1, std::numeric_limits<int>::max(), 500, stream);
-    int length = Input::Int("Длина (км)", 1, std::numeric_limits<int>::max(), 100, stream);
-    std::string name = Input::String("Название", "Pipe", stream);
-    bool repair = Input::Bool("В ремонте?", false, stream);
+    int diameter = Input::Int("Диаметр (мм)", 1, std::numeric_limits<int>::max(), 500);
+    int length = Input::Int("Длина (км)", 1, std::numeric_limits<int>::max(), 100);
+    std::string name = Input::String("Название", "Pipe");
+    bool repair = Input::Bool("В ремонте?", false);
 
     pipe = Pipe(diameter, length, name, repair);
 

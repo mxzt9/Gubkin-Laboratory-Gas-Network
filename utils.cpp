@@ -1,24 +1,16 @@
-#include <sstream>
 #include <cstdlib>
-#include <string>
-#include <iostream>
 #include <format>
 #include <chrono>
 
 #include "utils.hpp"
-
 
 namespace Output {
     void clearConsole() {
         std::system("cls");
     }
 
-    void Message(const std::string& message, const std::string prefix, std::ostream& output) {
-        output << prefix << message;
-
-        if (&output != &std::cerr) {
-            std::cerr << prefix << message;
-        }
+    void Message(const std::string& message, const std::string& prefix) {
+        std::cout << prefix << message;
     }
 
     void Error(const std::string& message) {
@@ -38,43 +30,32 @@ namespace Output {
     }
 }
 
-
 namespace Input {
-    std::string String(const std::string& prompt, const std::string& default_value, std::istream& input) {
-        std::string full_prompt {};
+    std::string String(const std::string& prompt, const std::string& default_value) {
+        std::cout << prompt;
 
-        if (default_value.empty()) {
-            full_prompt = std::format("{}: ", prompt);
-        } else {
-            full_prompt = std::format("{} [значение по умолчанию: {}]: ", prompt, default_value);
+        if (!default_value.empty()) {
+            std::cout << " [значение по умолчанию: " << default_value << "]";
         }
 
-        Output::Message(full_prompt);
+        std::cout << ": ";
 
         std::string value;
-        if (!std::getline(input, value)) {
+        if (!std::getline(std::cin, value)) {
             throw Command::Exit;
         }
-
-        if (value.empty()) {
-            std::cerr << default_value << '\n';
-            return default_value;
-        }
-
-        std::cerr << value << '\n';
 
         if (value == "exit" || value == "Exit" || value == "EXIT") {
             throw Command::Exit;
         }
 
-        return value;
+        return value.empty() ? default_value : value;
     }
 
-    static int readInt(const std::string& prompt, int min, int max, const std::string& default_value, std::istream& input) {
-        const std::string full_prompt = std::format("{} (от {} до {})", prompt, min, max);
-
+    int Int(const std::string& prompt, int min, int max, int default_value) {
         while (true) {
-            const std::string text = String(full_prompt, default_value, input);
+            std::string text = String(std::format("{} (от {} до {})", prompt, min, max), default_value == -1 ? "" : std::to_string(default_value));
+
             std::istringstream stream(text);
             int value;
 
@@ -92,41 +73,27 @@ namespace Input {
         }
     }
 
-    int Int(const std::string& prompt, int min, int max, std::istream& input) {
-        return readInt(prompt, min, max, "", input);
-    }
-
-    int Int(const std::string& prompt, int min, int max, int default_value, std::istream& input) {
-        return readInt(prompt, min, max, std::to_string(default_value), input);
-    }
-
-    void Pause(std::istream& input) {
-        Output::Message("Нажмите Enter для продолжения: ");
-
-        std::string value;
-        if (!std::getline(input, value)) {
-            throw Command::Exit;
-        }
-
-        std::cerr << value << '\n';
-    }
-
-    bool Bool(const std::string& prompt, bool default_value, std::istream& input) {
-        std::string full_prompt = prompt + " (y/n)";
-
+    bool Bool(const std::string& prompt, bool default_value) {
         while (true) {
-            const std::string value = String(full_prompt, default_value ? "y" : "n", input);
+            std::string value = String(prompt + " (y/n)", default_value ? "y" : "n");
 
-            if (value == "y" || value == "Y") { return true; }
-            if (value == "n" || value == "N") { return false; }
+            if (value == "y" || value == "Y") return true;
+            if (value == "n" || value == "N") return false;
 
             Output::Error("Введите y или n.\n");
         }
     }
 
+    void Pause() {
+        std::cout << "Нажмите Enter для продолжения: ";
+
+        std::string value;
+        if (!std::getline(std::cin, value)) {
+            throw Command::Exit;
+        }
+    }
 }
 
 std::string getTimestamp() {
-    std::string time = std::format("{:%d_%m_%Y %H_%M_%OS}", std::chrono::system_clock::now());
-    return time;
+    return std::format("{:%d_%m_%Y %H_%M_%OS}", std::chrono::system_clock::now());
 }

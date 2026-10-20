@@ -18,6 +18,8 @@ class Pipe {
         Pipe() = default; // Пустой объект для загрузки, без выдачи нового ID.
         Pipe(int diameter, int length, const std::string& name, bool repair);
 
+        static void reset_next_id() { next_id = 1; }
+
         // Геттеры
         int get_id() const { return id; }
         const std::string& get_name() const { return name; }
