@@ -44,6 +44,7 @@ namespace Input {
         if (!std::getline(std::cin, value)) {
             throw Command::Exit;
         }
+        std::cerr << value << '\n';
 
         if (value == "exit" || value == "Exit" || value == "EXIT") {
             throw Command::Exit;
@@ -91,9 +92,11 @@ namespace Input {
         if (!std::getline(std::cin, value)) {
             throw Command::Exit;
         }
+
+        std::cerr << value << '\n';
     }
 }
 
 std::string getTimestamp() {
-    return std::format("{:%d_%m_%Y %H_%M_%OS}", std::chrono::system_clock::now());
+    return std::format("{:%d_%m_%Y_%H_%M_%OS}", std::chrono::system_clock::now());
 }

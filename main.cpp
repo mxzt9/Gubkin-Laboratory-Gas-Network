@@ -18,7 +18,6 @@ int main() {
 
     std::ofstream logfile("logs/log_" + getTimestamp() + ".txt");
     Logger logger(std::cerr);
-
     if (logfile) {
         logger.redirect(logfile);
     }
