@@ -1,0 +1,552 @@
+30
+0
+Portovaya CS
+12
+12
+2
+1
+Vyborg CS
+8
+6
+1
+2
+Baltic CS
+10
+5
+2
+3
+Primorsk CS
+6
+0
+0
+4
+Ladoga CS
+9
+3
+1
+5
+Volkhov CS
+7
+4
+0
+6
+Neva CS
+16
+14
+2
+7
+Northern CS
+5
+1
+1
+8
+Reserve CS
+4
+0
+0
+9
+Shore CS
+11
+10
+2
+10
+Lake CS
+11
+0
+1
+11
+Priozersk CS
+18
+18
+2
+12
+Forest CS
+4
+2
+0
+13
+Pine CS
+11
+3
+1
+14
+Luga CS
+18
+17
+2
+15
+Volkhovskaya CS
+4
+0
+0
+16
+Karelian CS
+11
+11
+1
+17
+Finnish CS
+18
+9
+2
+18
+Leningrad CS
+4
+1
+0
+19
+Novgorod CS
+11
+10
+1
+20
+Tikhvin CS
+18
+0
+2
+21
+Svir CS
+4
+4
+0
+22
+Kirishi CS
+11
+5
+1
+23
+Valdai CS
+18
+6
+2
+24
+Eastern CS
+4
+3
+0
+25
+Western CS
+11
+0
+1
+26
+Southern CS
+18
+18
+2
+27
+Marine CS
+4
+2
+0
+28
+Coastal CS
+11
+3
+1
+29
+Central CS
+18
+17
+2
+80
+0
+Nord Stream 1
+1400
+1224
+0
+1
+Nord Stream 1 - reserve
+1400
+1218
+1
+2
+Baltic Mainline
+1000
+315
+0
+3
+Vyborg - Portovaya
+1400
+47
+0
+4
+Ladoga - Volkhov
+1000
+186
+1
+5
+Primorsk Branch
+700
+63
+0
+6
+Neva Interconnector
+500
+12
+0
+7
+Northern Bypass
+1000
+208
+0
+8
+Shore Section
+700
+34
+1
+9
+Reserve Interconnector
+500
+7
+1
+10
+Volkhov - Neva
+1000
+142
+0
+11
+Baltic - Primorsk
+700
+91
+0
+12
+Ladoga Spur
+500
+26
+0
+13
+Portovaya - Baltic
+1400
+275
+1
+14
+Northern Branch
+700
+118
+0
+15
+Shore - Reserve
+500
+19
+1
+16
+Nord Stream 1 - section 17
+500
+377
+0
+17
+Baltic Mainline - section 18
+700
+450
+1
+18
+Karelian Branch - section 19
+1000
+523
+0
+19
+Ladoga Bypass - section 20
+1400
+596
+0
+20
+Volkhov Line - section 21
+500
+669
+0
+21
+Neva Interconnector - section 22
+700
+742
+1
+22
+Primorsk Spur - section 23
+1000
+19
+0
+23
+Shore Reserve - section 24
+1400
+92
+0
+24
+Nord Stream 1 - section 25
+500
+165
+1
+25
+Baltic Mainline - section 26
+700
+238
+0
+26
+Karelian Branch - section 27
+1000
+311
+0
+27
+Ladoga Bypass - section 28
+1400
+384
+0
+28
+Volkhov Line - section 29
+500
+457
+1
+29
+Neva Interconnector - section 30
+700
+530
+0
+30
+Primorsk Spur - section 31
+1000
+603
+0
+31
+Shore Reserve - section 32
+1400
+676
+1
+32
+Nord Stream 1 - section 33
+500
+749
+0
+33
+Baltic Mainline - section 34
+700
+26
+0
+34
+Karelian Branch - section 35
+1000
+99
+0
+35
+Ladoga Bypass - section 36
+1400
+172
+1
+36
+Volkhov Line - section 37
+500
+245
+0
+37
+Neva Interconnector - section 38
+700
+318
+0
+38
+Primorsk Spur - section 39
+1000
+391
+1
+39
+Shore Reserve - section 40
+1400
+464
+0
+40
+Nord Stream 1 - section 41
+500
+537
+0
+41
+Baltic Mainline - section 42
+700
+610
+0
+42
+Karelian Branch - section 43
+1000
+683
+1
+43
+Ladoga Bypass - section 44
+1400
+756
+0
+44
+Volkhov Line - section 45
+500
+33
+0
+45
+Neva Interconnector - section 46
+700
+106
+1
+46
+Primorsk Spur - section 47
+1000
+179
+0
+47
+Shore Reserve - section 48
+1400
+252
+0
+48
+Nord Stream 1 - section 49
+500
+325
+0
+49
+Baltic Mainline - section 50
+700
+398
+1
+50
+Karelian Branch - section 51
+1000
+471
+0
+51
+Ladoga Bypass - section 52
+1400
+544
+0
+52
+Volkhov Line - section 53
+500
+617
+1
+53
+Neva Interconnector - section 54
+700
+690
+0
+54
+Primorsk Spur - section 55
+1000
+763
+0
+55
+Shore Reserve - section 56
+1400
+40
+0
+56
+Nord Stream 1 - section 57
+500
+113
+1
+57
+Baltic Mainline - section 58
+700
+186
+0
+58
+Karelian Branch - section 59
+1000
+259
+0
+59
+Ladoga Bypass - section 60
+1400
+332
+1
+60
+Volkhov Line - section 61
+500
+405
+0
+61
+Neva Interconnector - section 62
+700
+478
+0
+62
+Primorsk Spur - section 63
+1000
+551
+0
+63
+Shore Reserve - section 64
+1400
+624
+1
+64
+Nord Stream 1 - section 65
+500
+697
+0
+65
+Baltic Mainline - section 66
+700
+770
+0
+66
+Karelian Branch - section 67
+1000
+47
+1
+67
+Ladoga Bypass - section 68
+1400
+120
+0
+68
+Volkhov Line - section 69
+500
+193
+0
+69
+Neva Interconnector - section 70
+700
+266
+0
+70
+Primorsk Spur - section 71
+1000
+339
+1
+71
+Shore Reserve - section 72
+1400
+412
+0
+72
+Nord Stream 1 - section 73
+500
+485
+0
+73
+Baltic Mainline - section 74
+700
+558
+1
+74
+Karelian Branch - section 75
+1000
+631
+0
+75
+Ladoga Bypass - section 76
+1400
+704
+0
+76
+Volkhov Line - section 77
+500
+777
+0
+77
+Neva Interconnector - section 78
+700
+54
+1
+78
+Primorsk Spur - section 79
+1000
+127
+0
+79
+Shore Reserve - section 80
+1400
+200
+0
