@@ -30,7 +30,7 @@ public:
     int get_unit_ratio() const { return unit_amount != 0 ? active_unit_amount * 100 / unit_amount : 0; }
     
     // Принтеры
-    static void print_table_header();
+    static void printTableHeader();
     friend std::ostream& operator<<(std::ostream& stream, const CStation& station);
     friend std::istream& operator>>(std::istream& stream, CStation& station);
 

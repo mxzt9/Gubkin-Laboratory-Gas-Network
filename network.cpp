@@ -32,13 +32,13 @@ void Network::print() {
     std::sort(pipeIds.begin(), pipeIds.end());
     std::sort(CStationIds.begin(), CStationIds.end());
 
-    Pipe::print_table_header();
+    Pipe::printTableHeader();
 
     for (const int id : pipeIds) {
         std::cout << PipeMap.at(id);
     }
 
-    CStation::print_table_header();
+    CStation::printTableHeader();
 
     for (const int id : CStationIds) {
         std::cout << CStationMap.at(id);
@@ -47,36 +47,36 @@ void Network::print() {
     Output::Message("\n\n");
 }
 
-std::vector<int> Network::searchPipesByName(const std::string& name) const {
-    std::vector<int> result;
+std::set<int> Network::searchPipesByName(const std::string& name) const {
+    std::set<int> result;
 
     for (const auto& [id, pipe] : PipeMap) {
         if (Filter::Name(pipe, name)) {
-            result.push_back(id);
+            result.insert(id);
         }
     }
 
     return result;
 }
 
-std::vector<int> Network::searchCStationsByName(const std::string& name) const {
-    std::vector<int> result;
+std::set<int> Network::searchCStationsByName(const std::string& name) const {
+    std::set<int> result;
 
     for (const auto& [id, station] : CStationMap) {
         if (Filter::Name(station, name)) {
-            result.push_back(id);
+            result.insert(id);
         }
     }
 
     return result;
 }
 
-std::vector<int> Network::searchPipesByRepair(bool repair) const {
-    std::vector<int> result;
+std::set<int> Network::searchPipesByRepair(bool repair) const {
+    std::set<int> result;
 
     for (const auto& [id, pipe] : PipeMap) {
         if (Filter::Repair(pipe, repair)) {
-            result.push_back(id);
+            result.insert(id);
         }
     }
 
@@ -84,16 +84,16 @@ std::vector<int> Network::searchPipesByRepair(bool repair) const {
 }
 
 
-std::vector<int> Network::searchCStationsByActive(const std::string& comparison, int ratio) const {
+std::set<int> Network::searchCStationsByActive(const std::string& comparison, int ratio) const {
     if (!(comparison == "<" || comparison == "<=" || comparison == "=" || comparison == ">=" || comparison == ">")) {
         return {};
     }
     
-    std::vector<int> result {};
+    std::set<int> result {};
 
     for (const auto& [id, station] : CStationMap) {
         if (Filter::Active(station, comparison, ratio)) {
-            result.push_back(id);
+            result.insert(id);
         }
     }
 
@@ -101,11 +101,7 @@ std::vector<int> Network::searchCStationsByActive(const std::string& comparison,
 }
 
 
-bool Network::editPipe(const std::vector<int>& ids, bool new_repair) {
-    if (ids.empty()) {
-        return false;
-    }
-
+bool Network::editPipe(const std::set<int>& ids, bool new_repair) {
     for (const auto id : ids) {
         if (!PipeMap.contains(id)) {
             return false;
@@ -119,8 +115,8 @@ bool Network::editPipe(const std::vector<int>& ids, bool new_repair) {
     return true;
 }
 
-bool Network::editCStation(const std::vector<int>& ids, int new_active_unit_amount) {
-    if (ids.empty() || new_active_unit_amount < 0) {
+bool Network::editCStation(const std::set<int>& ids, int new_active_unit_amount) {
+    if (new_active_unit_amount < 0) {
         return false;
     }
 
@@ -142,17 +138,7 @@ bool Network::editCStation(const std::vector<int>& ids, int new_active_unit_amou
     return true;
 }
 
-bool Network::deletePipe(const std::vector<int>& ids) {
-    if (ids.empty()) {
-        return false;
-    }
-
-    for (const auto id : ids) {
-        if (!PipeMap.contains(id)) {
-            return false;
-        }
-    }
-
+bool Network::deletePipe(const std::set<int>& ids) {
     for (const auto id : ids) {
         PipeMap.erase(id);
     }
@@ -160,17 +146,7 @@ bool Network::deletePipe(const std::vector<int>& ids) {
     return true;
 }
 
-bool Network::deleteCStation(const std::vector<int>& ids) {
-    if (ids.empty()) {
-        return false;
-    }
-
-    for (const auto id : ids) {
-        if (!CStationMap.contains(id)) {
-            return false;
-        }
-    }
-
+bool Network::deleteCStation(const std::set<int>& ids) {
     for (const auto id : ids) {
         CStationMap.erase(id);
     }

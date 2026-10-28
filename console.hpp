@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <vector>
 #include <string>
 
@@ -10,7 +11,7 @@ private:
     Network& network;
 
     // Пункты главного меню
-    const std::vector<std::string> mainMenuItems{
+    const std::vector<std::string> mainMenuItems {
         "Добавить трубу",
         "Добавить КС",
         "Просмотр",
@@ -26,11 +27,19 @@ private:
     };
 
     // Пункты меню просмотра
-    const std::vector<std::string> searchMenuItems{
+    const std::vector<std::string> searchMenuItems {
         "Поиск труб по названию",
         "Поиск труб по статусу ремонта",
         "Поиск КС по названию",
         "Поиск КС по проценту/числу активных цехов"
+    };
+
+    // Пункты меню действий с найденным подмножеством
+    const std::vector<std::string> searchInSubsetMenuItems {
+        "Редактировать все найденные",
+        "Удалить все найденные",
+        "Редактировать выбранные ID",
+        "Удалить выбранные ID"
     };
 
     // Хендлеры
@@ -45,13 +54,16 @@ private:
     void handleLoad();
 
     // Хендлеры поиска
-    void handleSearchPipesByName() const;
-    void handleSearchPipesByRepair() const;
-    void handleSearchCStationsByName() const;
-    void handleSearchCStationsByActive() const;
+    void handlePipeSearchResult(const std::set<int>& ids);
+    void handleCStationSearchResult(const std::set<int>& ids);
+    void handleSearchPipesByName();
+    void handleSearchPipesByRepair();
+    void handleSearchCStationsByName();
+    void handleSearchCStationsByActive();
 
     // Принтеры
     void printMenu() const;
+    void printNetworkMenu() const;
     void printSearchMenu() const;
 
 public:

@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <set>
 #include <filesystem>
 
 #include "pipe.hpp"
@@ -31,19 +32,19 @@ public:
     void print();
 
     // Поиск по фильтрам
-    std::vector<int> searchPipesByName(const std::string& name) const;
-    std::vector<int> searchCStationsByName(const std::string& name) const;
+    std::set<int> searchPipesByName(const std::string& name) const;
+    std::set<int> searchCStationsByName(const std::string& name) const;
 
-    std::vector<int> searchPipesByRepair(bool repair) const;
-    std::vector<int> searchCStationsByActive(const std::string& comparison, int ratio) const;
+    std::set<int> searchPipesByRepair(bool repair) const;
+    std::set<int> searchCStationsByActive(const std::string& comparison, int ratio) const;
 
     // Редактирование
-    bool editPipe(const std::vector<int>& ids, bool new_repair);
-    bool editCStation(const std::vector<int>& ids, int new_active_unit_amount);
+    bool editPipe(const std::set<int>& ids, bool new_repair);
+    bool editCStation(const std::set<int>& ids, int new_active_unit_amount);
 
     // Удаление
-    bool deletePipe(const std::vector<int>& ids);
-    bool deleteCStation(const std::vector<int>& ids);
+    bool deletePipe(const std::set<int>& ids);
+    bool deleteCStation(const std::set<int>& ids);
 
     // Работа с файлам
     bool save(const std::filesystem::path& path) const;

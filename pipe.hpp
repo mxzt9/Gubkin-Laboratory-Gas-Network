@@ -28,7 +28,7 @@ class Pipe {
         bool get_repair() const { return repair; }
         
         // Принтеры 
-        static void print_table_header();
+        static void printTableHeader();
         friend std::ostream& operator<<(std::ostream& stream, const Pipe& pipe);
         friend std::istream& operator>>(std::istream& stream, Pipe& pipe);
 

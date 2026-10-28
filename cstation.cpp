@@ -11,7 +11,7 @@ int CStation::next_id = 1;
 
 CStation::CStation(int unit_amount, int active_unit_amount, const std::string& name, int station_type) : id(next_id++), unit_amount(unit_amount), active_unit_amount(active_unit_amount), name(name), station_type(station_type) {}
 
-void CStation::print_table_header() {
+void CStation::printTableHeader() {
     Output::Message("\n                 [Компрессорные станции]\n");
     Output::Message("──────┬────────────────┬───────────┬─────────┬────────────────────────────────────\n");
     Output::Message(std::format("{:<5} │ {:<14} │ {:<9} │ {:<7} │ {:<8}\n",

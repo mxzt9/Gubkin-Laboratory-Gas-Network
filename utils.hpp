@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <set>
 #include <sstream>
 
@@ -29,18 +28,18 @@ namespace Input {
     void Pause();
 
     template<typename T>
-    std::vector<T> Vector(const std::string& prompt) {
+    std::set<T> Set(const std::string& prompt) {
         while (true) {
             std::istringstream stream(String(prompt));
             std::set<T> ids;
-            T id;
+            T id {};
 
             while (stream >> id) {
                 ids.insert(id);
             }
 
             if (!ids.empty() && stream.eof()) {
-                return {ids.begin(), ids.end()};
+                return ids;
             }
 
             Output::Error("Введите числа через пробел.\n");
@@ -60,10 +59,10 @@ namespace Filter {
     inline constexpr auto Active = [](const CStation& object, const std::string& comparison, int ratio) {
         const auto value = object.get_unit_ratio();
 
-        if (comparison == "<") return value < ratio;
+        if (comparison == "<")  return value < ratio;
         if (comparison == "<=") return value <= ratio;
-        if (comparison == "=") return value == ratio;
-        if (comparison == ">") return value > ratio;
+        if (comparison == "=")  return value == ratio;
+        if (comparison == ">")  return value > ratio;
         if (comparison == ">=") return value >= ratio;
 
         return false;

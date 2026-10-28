@@ -12,7 +12,7 @@ int Pipe::next_id = 1;
 Pipe::Pipe(int diameter, int length, const std::string& name, bool repair) : id(next_id++), diameter(diameter), 
 length(length), name(name), repair(repair) {}
 
-void Pipe::print_table_header() {
+void Pipe::printTableHeader() {
     Output::Message("\n                                     [Трубы]\n");
     Output::Message("──────┬────────────────┬──────────┬──────────┬──────────┬──────────────┬──────────\n");
     Output::Message(std::format("{:<5} │ {:<14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
