@@ -21,8 +21,8 @@ private:
         "Удалить КС",
         "Сохранить",
         "Загрузить",
-        //"Присоединить трубу",
-        //"Топологическая сортировка",
+        "Присоединить трубу",
+        "Топологическая сортировка",
         //"Найти кратчайший путь между КС"
     };
 
@@ -52,6 +52,8 @@ private:
     void handleDeleteCStation();
     void handleSave();
     void handleLoad();
+    void handleConnectPipe();
+    void handleTopologicalSort();
 
     // Хендлеры поиска
     void handlePipeSearchResult(const std::set<int>& ids);

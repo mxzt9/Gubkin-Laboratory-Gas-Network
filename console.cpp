@@ -345,6 +345,57 @@ void Console::handleLoad() {
     }
 }
 
+void Console::handleConnectPipe() {
+    const int diameter = Input::Int("Диаметр (мм)", 1, std::numeric_limits<int>::max(), 500);
+    int targetPipe_id = network.findTargetPipe(diameter);
+
+    if (targetPipe_id == - 1) {
+        Output::Warning("Трубы с таким диаметром не нашлось\n");
+        bool choice = Input::Bool("Хотите создать трубу с таким диаметром?");
+    
+        if (!choice) return;
+        
+        int length = Input::Int("Длина (км)", 1, std::numeric_limits<int>::max(), 100);
+        std::string name = Input::String("Название", "Pipe");
+        bool repair = Input::Bool("В ремонте?", false);
+        
+        Pipe pipe = {diameter, length, name, repair};
+        targetPipe_id = pipe.get_id();
+        network.createPipe(pipe);
+    }
+    
+    const int CStationOut_id = Input::Int("ID КС откуда труба выходит", 1, std::numeric_limits<int>::max());
+    const int CStationIn_id = Input::Int("ID КС куда труба входит", 1, std::numeric_limits<int>::max());
+
+    if (network.connect(targetPipe_id, CStationOut_id, CStationIn_id)) {
+        const std::string message = "Труба с ID= " + std::to_string(targetPipe_id) + " была успешно подсоединена к КС с ID= "
+                                                  + std::to_string(CStationOut_id) + " и "
+                                                  + std::to_string(CStationIn_id) + '\n';
+        Output::Success(message);
+        return;
+    }
+
+    Output::Error("Ошибка во время присоединения, скорее всего не нашлось таких КС\n");
+}
+
+void Console::handleTopologicalSort() {
+    std::vector<int> result;
+
+    // Сортировка КС, при наличии цикла выводим ошибку
+    if (!network.topologicalSort(result)) {
+        Output::Error("В графе присутствует цикл - сортировка невозможна.\n");
+        return;
+    }
+
+    // Вывод КС в полученном порядке
+    Output::Message("Топологически отсортированный массив:\n");
+    for (const auto& id : result) {
+        Output::Message(std::format("{}->", id));
+    }
+
+    std::cout << '\n';
+}
+
 void Console::run() {
     bool running = true;
 
@@ -396,11 +447,11 @@ void Console::run() {
                     break;
 
                 case 10:
-                    //handleConnectPipe();
+                    handleConnectPipe();
                     break;
 
                 case 11:
-                    //handleTopologicalSort();
+                    handleTopologicalSort();
                     break;
 
                 case 12:

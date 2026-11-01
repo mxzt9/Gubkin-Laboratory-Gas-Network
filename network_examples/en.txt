@@ -155,398 +155,558 @@ Nord Stream 1
 1400
 1224
 0
+0
+9
 1
 Nord Stream 1 - reserve
 1400
 1218
 1
+0
+9
 2
 Baltic Mainline
 1000
 315
+0
+2
 0
 3
 Vyborg - Portovaya
 1400
 47
 0
+1
+0
 4
 Ladoga - Volkhov
 1000
 186
 1
+4
+5
 5
 Primorsk Branch
 700
 63
 0
+2
+3
 6
 Neva Interconnector
 500
 12
 0
+5
+6
 7
 Northern Bypass
 1000
 208
 0
+7
+8
 8
 Shore Section
 700
 34
 1
 9
+8
+9
 Reserve Interconnector
 500
 7
 1
+8
+9
 10
 Volkhov - Neva
 1000
 142
 0
+5
+6
 11
 Baltic - Primorsk
 700
 91
 0
+2
+3
 12
 Ladoga Spur
 500
 26
 0
+4
+11
 13
 Portovaya - Baltic
 1400
 275
 1
+0
+2
 14
 Northern Branch
 700
 118
 0
+7
+16
 15
 Shore - Reserve
 500
 19
 1
+9
+8
 16
 Nord Stream 1 - section 17
 500
 377
 0
+0
+9
 17
 Baltic Mainline - section 18
 700
 450
 1
+2
+16
 18
 Karelian Branch - section 19
 1000
 523
 0
+16
+17
 19
 Ladoga Bypass - section 20
 1400
 596
 0
+4
+11
 20
 Volkhov Line - section 21
 500
 669
 0
+5
+15
 21
 Neva Interconnector - section 22
 700
 742
 1
+6
+18
 22
 Primorsk Spur - section 23
 1000
 19
 0
+3
+27
 23
 Shore Reserve - section 24
 1400
 92
 0
+9
+8
 24
 Nord Stream 1 - section 25
 500
 165
 1
+9
+27
 25
 Baltic Mainline - section 26
 700
 238
 0
+16
+19
 26
 Karelian Branch - section 27
 1000
 311
 0
+16
+20
 27
 Ladoga Bypass - section 28
 1400
 384
 0
+4
+12
 28
 Volkhov Line - section 29
 500
 457
 1
+5
+21
 29
 Neva Interconnector - section 30
 700
 530
 0
+6
+22
 30
 Primorsk Spur - section 31
 1000
 603
 0
+3
+28
 31
 Shore Reserve - section 32
 1400
 676
 1
+8
+26
 32
 Nord Stream 1 - section 33
 500
 749
 0
+27
+29
 33
 Baltic Mainline - section 34
 700
 26
 0
+19
+23
 34
 Karelian Branch - section 35
 1000
 99
 0
+17
+24
 35
 Ladoga Bypass - section 36
 1400
 172
 1
+11
+25
 36
 Volkhov Line - section 37
 500
 245
 0
+15
+14
 37
 Neva Interconnector - section 38
 700
 318
 0
+18
+10
 38
 Primorsk Spur - section 39
 1000
 391
 1
+28
+13
 39
 Shore Reserve - section 40
 1400
 464
 0
+9
+29
 40
 Nord Stream 1 - section 41
 500
 537
 0
+5
+2
 41
 Baltic Mainline - section 42
 700
 610
 0
+6
+9
 42
 Karelian Branch - section 43
 1000
 683
 1
+16
+22
 43
 Ladoga Bypass - section 44
 1400
 756
 0
+4
+16
 44
 Volkhov Line - section 45
 500
 33
 0
+5
+19
 45
 Neva Interconnector - section 46
 700
 106
 1
+18
+23
 46
 Primorsk Spur - section 47
 1000
 179
 0
+3
+29
 47
 Shore Reserve - section 48
 1400
 252
 0
+8
+25
 48
 Nord Stream 1 - section 49
 500
 325
 0
+0
+27
 49
 Baltic Mainline - section 50
 700
 398
 1
+2
+20
 50
 Karelian Branch - section 51
 1000
 471
 0
+16
+24
 51
 Ladoga Bypass - section 52
 1400
 544
 0
+4
+26
 52
 Volkhov Line - section 53
 500
 617
 1
+5
+21
 53
 Neva Interconnector - section 54
 700
 690
 0
+6
+22
 54
 Primorsk Spur - section 55
 1000
 763
 0
+3
+28
 55
 Shore Reserve - section 56
 1400
 40
 0
+9
+10
 56
 Nord Stream 1 - section 57
 500
 113
 1
+27
+7
 57
 Baltic Mainline - section 58
 700
 186
 0
+19
+17
 58
 Karelian Branch - section 59
 1000
 259
 0
+20
+14
 59
 Ladoga Bypass - section 60
 1400
 332
 1
+11
+25
 60
 Volkhov Line - section 61
 500
 405
 0
+15
+12
 61
 Neva Interconnector - section 62
 700
 478
 0
+18
+26
 62
 Primorsk Spur - section 63
 1000
 551
 0
+28
+29
 63
 Shore Reserve - section 64
 1400
 624
 1
+8
+13
 64
 Nord Stream 1 - section 65
 500
 697
 0
+0
+9
 65
 Baltic Mainline - section 66
 700
 770
 0
+2
+17
 66
 Karelian Branch - section 67
 1000
 47
 1
+16
+23
 67
 Ladoga Bypass - section 68
 1400
 120
 0
+4
+20
 68
 Volkhov Line - section 69
 500
 193
 0
+5
+22
 69
 Neva Interconnector - section 70
 700
 266
 0
+6
+14
 70
 Primorsk Spur - section 71
 1000
 339
 1
+3
+27
 71
 Shore Reserve - section 72
 1400
 412
 0
+9
+25
 72
 Nord Stream 1 - section 73
 500
 485
 0
+27
+18
 73
 Baltic Mainline - section 74
 700
 558
 1
+19
+15
 74
 Karelian Branch - section 75
 1000
 631
 0
+20
+24
 75
 Ladoga Bypass - section 76
 1400
 704
 0
+11
+12
 76
 Volkhov Line - section 77
 500
 777
 0
+15
+5
 77
 Neva Interconnector - section 78
 700
 54
 1
+18
+6
 78
 Primorsk Spur - section 79
 1000
 127
 0
+28
+3
 79
 Shore Reserve - section 80
 1400
 200
 0
+8
+26

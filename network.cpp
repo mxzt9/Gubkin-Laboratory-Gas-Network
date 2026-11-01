@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <queue>
 
 #include "network.hpp"
 #include "utils.hpp"
@@ -256,4 +257,92 @@ bool Network::load(const std::filesystem::path& path) {
     }
 
     return true;
+}
+
+int Network::findTargetPipe(int target_diameter) const {
+    for (const auto& [id, pipe] : PipeMap) {
+        if (pipe.get_diameter() == target_diameter && pipe.is_free()) {
+            return id;
+        }
+    }
+
+    return -1;
+}
+
+bool Network::connect(int pipe_id, int CStationOut_id, int CStationIn_id) {
+    if (!PipeMap.contains(pipe_id)) return false;
+    if (!CStationMap.contains(CStationOut_id) || !CStationMap.contains(CStationIn_id)) return false;
+    if (CStationOut_id == CStationIn_id) return false;
+
+    PipeMap[pipe_id].connect(CStationOut_id, CStationIn_id);
+    return true;
+}
+
+bool Network::topologicalSort(std::vector<int>& result) const {
+    // Очистка массива
+    result.clear();
+
+    // Массив вида {id КС: степень входящих в нее соединений}
+    std::unordered_map<int, int> in_degree;
+
+    // Массив вида {id КС: Id КС-соседей}
+    std::unordered_map<int, std::vector<int>> graph;
+
+    // Строим граф
+    for (const auto& [id, pipe] : PipeMap) {
+        // Получение id
+        int out = pipe.get_CStationOut_id();
+        int in = pipe.get_CStationIn_id();
+
+        // Пропуск не подключенных труб
+        if (out == -1 || in == -1) {
+            continue;
+        }
+
+        // Добавляем вершины, если их ещё нет
+        in_degree.try_emplace(out, 0);
+        in_degree.try_emplace(in, 0);
+
+        // Увеличиваем степень вершины
+        in_degree[in]++;
+
+        // Добавляем соединение
+        graph[out].push_back(in);
+    }
+
+
+    std::queue<int> queue;
+
+    // Добавляем в очередь вершины с отсутствующими входными подключениями
+    for (const auto& [CStationId, degree] : in_degree) {
+        if (degree == 0) {
+            queue.push(CStationId);
+        }
+    }
+
+
+    while (!queue.empty()) {
+
+        // Получаем первый id
+        int currentId = queue.front();
+
+        // Удаляем его
+        queue.pop();
+
+        // Добавляем в результирующий массив
+        result.push_back(currentId);
+
+        // Удаляем исходящие рёбра текущей вершины
+        for (int next_id : graph[currentId]) {
+            in_degree[next_id]--;
+
+            // Если у отсоединенной вершины количество ребер стало ноль добавляем в очередь
+            if (in_degree[next_id] == 0) {
+                queue.push(next_id);
+            }
+        }
+    }
+
+    // Проверка на наличие цикла, если размеры не совпадут -> false
+    return result.size() == in_degree.size();
 }

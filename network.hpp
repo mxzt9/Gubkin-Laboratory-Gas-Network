@@ -49,4 +49,14 @@ public:
     // Работа с файлам
     bool save(const std::filesystem::path& path) const;
     bool load(const std::filesystem::path& path);
+
+    // Поиск свободной трубы
+    int findTargetPipe(int diameter) const;
+
+    // Присоединение
+    bool connect(int pipe_id, int CStationOut_id, int CStationIn_id);
+
+    // Топологическая сортировка
+    bool topologicalSort(std::vector<int>& result) const;
+    
 };

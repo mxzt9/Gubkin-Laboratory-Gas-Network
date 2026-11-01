@@ -16,7 +16,7 @@ void Pipe::printTableHeader() {
     Output::Message("\n                                     [Трубы]\n");
     Output::Message("──────┬────────────────┬──────────┬──────────┬──────────┬──────────────┬──────────\n");
     Output::Message(std::format("{:<5} │ {:<14} │ {:<8} │ {:<8} │ {:<8} │ {:<12} │ {:<9}\n",
-        "ID", "Name", "Diameter", "Length", "Repair", "ID CS From", "ID CS To"));
+        "ID", "Name", "Diameter", "Length", "Repair", "ID CS Out", "ID CS In"));
     Output::Message("──────┼────────────────┼──────────┼──────────┼──────────┼──────────────┼──────────\n");
 }
 
@@ -29,7 +29,9 @@ bool Pipe::save(std::ostream& file) const {
          << name << '\n'
          << diameter << '\n'
          << length << '\n'
-         << (repair ? 1 : 0) << '\n';
+         << (repair ? 1 : 0) << '\n'
+         << CStationOut_id_ << '\n'
+         << CStationIn_id_ << '\n';
 
     return file.good();
 }
@@ -41,7 +43,7 @@ bool Pipe::load(std::istream& file) {
 
     file.ignore();
 
-    if (!std::getline(file, name) || !(file >> diameter >> length >> repair)) {
+    if (!std::getline(file, name) || !(file >> diameter >> length >> repair >> CStationOut_id_ >> CStationIn_id_)) {
         return false;
     }
 
@@ -61,8 +63,8 @@ std::ostream& operator<<(std::ostream& stream, const Pipe& pipe) {
         pipe.diameter,
         pipe.length,
         pipe.repair ? "yes" : "no",
-        "-",
-        "-"
+        pipe.CStationOut_id_,
+        pipe.CStationIn_id_
     );
 
     return stream;
